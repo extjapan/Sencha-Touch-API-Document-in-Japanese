@@ -8,96 +8,89 @@ Ext.lib.Component = Ext.extend(Ext.util.Observable, {
 
     /**
      * @cfg {Mixed} renderTpl
-     * <p>An {@link Ext.XTemplate XTemplate} used to create the {@link #getEl Element} which will
-     * encapsulate this Component.</p>
-     * <p>You do not normally need to specify this. For the base classes {@link Ext.Component}, {@link Ext.Component},
-     * and {@link Ext.Container}, this defaults to <b><tt>'div'</tt></b>. The more complex Ext classes use a more complex
-     * DOM structure.</p>
-     * <p>This is intended to allow the developer to create application-specific utility Components encapsulated by
-     * different DOM elements.
+     * <p>このコンポーネントを覆う{@link #getEl Element}を生成するための{@link Ext.XTemplate XTemplate}。</p>
+     * <p>通常はこのオプションを直接設定することはありません。{@link Ext.Component}や{@link Ext.Container}などの基底
+		 * クラスでは、このプロパティのデフォルト値は<b><tt>div</tt></b>タグとなっています。もっと複雑なクラスでは、より
+		 * 複雑なDOM構造が使われています。</p>
+		 * <p>このプロパティは、開発者がアプリケーション特有のコンポーネントを作成する際に、別のDOM要素を利用可能とする
+		 * ためのものです。</p>
      */
     renderTpl: null,
 
     /**
      * @cfg {Mixed} renderTo
-     * <p>Specify the id of the element, a DOM element or an existing Element that this component
-     * will be rendered into.</p><div><ul>
-     * <li><b>Notes</b> : <ul>
-     * <div class="sub-desc">Do <u>not</u> use this option if the Component is to be a child item of
-     * a {@link Ext.Container Container}. It is the responsibility of the
-     * {@link Ext.Container Container}'s {@link Ext.Container#layout layout manager}
-     * to render and manage its child items.</div>
-     * <div class="sub-desc">When using this config, a call to render() is not required.</div>
+     * <p>このコンポーネントを描画する対象となるElementのID、DOM要素、またはElementそのものを設定します。</p><div><ul>
+     * <li><b>備考</b>：<ul>
+     * <div class="sub-desc">このコンポーネントが別の{@link Ext.Container Container}オブジェクトに内包される場合、
+		 * このオプションは<u>設定しない</u>でください。この場合{@link Ext.Container Container}の
+		 * {@link Ext.Container#layout レイアウトマネージャー}が内包される全てのコンポーネントの描画処理を担当します。</div>
+     * <div class="sub-desc">また、このオプションを設定した場合renderメソッドの呼び出しは必要ありません。</div>
      * </ul></li>
      * </ul></div>
-     * <p>See <tt>{@link #render}</tt> also.</p>
+     * <p><tt>{@link #render}</tt>メソッドも参照してください。</p>
      */
 
     /**
      * @cfg {String/Object} componentLayout
-     * <br><p>The sizing and positioning of the component Elements is the responsibility of
-     * the Component's layout manager which creates and manages the type of layout specific to the component.
-     * <p>If the {@link #layout} configuration is not explicitly specified for
-     * a general purpose compopnent the
-     * {@link Ext.layout.AutoComponentLayout default layout manager} will be used.
+     * <br><p>コンポーネントを構成するElementのサイズや配置についてはコンポーネントのレイアウトマネージャーが司っています。
+		 * レイアウトマネージャーはコンポーネント毎のレイアウトを生成し管理してくれます。
+     * <p>{@link #layout}が明示的に設定されていない一般的なコンポーネントの場合、
+		 * {@link Ext.layout.AutoComponentLayout}がデフォルトのレイアウトマネージャーとなります。</p>
      */
 
     /**
      * @cfg {Mixed} tpl
-     * An <bold>{@link Ext.Template}</bold>, <bold>{@link Ext.XTemplate}</bold>
-     * or an array of strings to form an Ext.XTemplate.
-     * Used in conjunction with the <code>{@link #data}</code> and
-     * <code>{@link #tplWriteMode}</code> configurations.
+     * <bold>{@link Ext.Template}</bold>、<bold>{@link Ext.XTemplate}</bold>、または
+     * Ext.XTemplateを生成するための文字列の配列を設定。
+     * <code>{@link #data}</code>および<code>{@link #tplWriteMode}</code>オプションと合わせて設定されます。
      */
 
     /**
      * @cfg {Mixed} data
-     * The initial set of data to apply to the <code>{@link #tpl}</code> to
-     * update the content area of the Component.
+		 * <code>{@link #tpl}</code>と組み合わされ、コンポーネントのコンテンツ領域に描画されるデータセット。
      */
 
     /**
-     * @cfg {String} tplWriteMode The Ext.(X)Template method to use when
-     * updating the content area of the Component. Defaults to <tt>'overwrite'</tt>
-     * (see <code>{@link Ext.XTemplate#overwrite}</code>).
+     * @cfg {String} tplWriteMode コンポーネントのコンテンツ領域を描画する際の{@link Ext.Template}、{@link Ext.XTemplate}
+		 * のモード。デフォルト値は<tt>'overwrite'</tt>（上書き）。詳しくは<code>{@link Ext.XTemplate#overwrite}</code>を参照。
      */
     tplWriteMode: 'overwrite',
 
     /**
      * @cfg {String} baseCls
-     * The base CSS class to apply to this components's element. This will also be prepended to
-     * elements within this component like Panel's body will get a class x-panel-body. This means
-     * that if you create a subclass of Panel, and you want it to get all the Panels styling for the
-     * element and the body, you leave the baseCls x-panel and use componentCls to add specific styling for this
-     * component.
+     * このコンポーネントの{@link #getElement Element}に適用される最もベースとなるCSSクラス。
+		 * このCSSクラス名はこのコンポーネントを構成する全てのDOM要素のCSSクラス名の「接頭辞」としても利用されます。
+		 * 例えば、Panelクラスのbodyにはx-panel-bodyといったCSSクラス名が適用されます。つまり、
+		 * 例えばPanelを継承したクラスで、単にスタイル設定だけを行ないたいのであれば、baseClsのx-panelには触れずに、
+		 * {@link #componentCls}を介してスタイル設定を行う方が簡単ということです。
      */
     baseCls: 'x-component',
 
     /**
      * @cfg {String} componentCls
-     * CSS Class to be added to a components root level element to give distinction to it
-     * via styling.
+     * コンポーネントの{@link #getElement Element}に適用されるCSSクラス。このクラスを介してコンポーネントのスタイル
+		 * 設定を行ってください。
      */
 
     /**
      * @cfg {String} cls
-     * An optional extra CSS class that will be added to this component's Element (defaults to '').  This can be
-     * useful for adding customized styles to the component or any of its children using standard CSS rules.
+     * このコンポーネントの{@link #getElement Element}に適用される追加のCSSクラス（デフォルトは''）。このオプションは
+		 * コンポーネントそのものや、その内包するDOM要素のスタイルをカスタマイズしたい場合に便利なオプションです。
      */
 
     /**
      * @cfg {String} disabledCls
-     * CSS class to add when the Component is disabled. Defaults to 'x-item-disabled'.
+     * コンポーネントが利用不可状態の時に適用するCSSクラス。デフォルト値は'x-item-disabled'。
      */
     disabledCls: 'x-item-disabled',
 
     /**
      * @cfg {String} ui
-     * A set of predefined ui styles for individual components.
+     * 個々のコンポーネント毎に予め定義されたUIのスタイル。
      *
-     * Most components support 'light' and 'dark'.
+     * lightとdarkはほとんどのコンポーネントで利用可能です。
      *
-     * Extra string added to the baseCls with an extra '-'.
+     * uiで指定された文字列はbaseClsの値に連結（'-'で連結）されて、CSSクラスとして{@link #getElement Element}に追加されます。
      * <pre><code>
       new Ext.Panel({
           title: 'Some Title',
@@ -105,13 +98,13 @@ Ext.lib.Component = Ext.extend(Ext.util.Observable, {
           ui: 'green'
       });
        </code></pre>
-     * <p>The ui configuration in this example would add 'x-component-green' as an additional class.</p>
+     * <p>上記のケースではx-component-greenというCSSクラスが追加されます。</p>
      */
 
    /**
      * @cfg {String} style
-     * A custom style specification to be applied to this component's Element.  Should be a valid argument to
-     * {@link Ext.Element#applyStyles}.
+     * このコンポーネントの{@link #getElement Element}にインラインスタイルとして適用されます。
+		 * 書式は{@link Ext.Element#applyStyles}メソッドで利用可能なものである必要があります。
      * <pre><code>
         new Ext.Panel({
             title: 'Some Title',
@@ -139,51 +132,51 @@ Ext.lib.Component = Ext.extend(Ext.util.Observable, {
     
     /**
      * @cfg {Number} width
-     * The width of this component in pixels.
+     * このコンポーネントの幅。単位はピクセル。
      */
     
     /**
      * @cfg {Number} height
-     * The height of this component in pixels.
+     * このコンポーネントの高さ。単位はピクセル。
      */
     
     /**
      * @cfg {Number/String} border
-     * Specifies the border for this component. The border can be a single numeric value to apply to all sides or
-     * it can be a CSS style specification for each style, for example: '10 5 3 10'.
+		 * このコンポーネントの枠線幅を設定。枠線幅は全ての辺（上下左右）に適用する1個の数字、あるいは
+		 * CSS方式で各辺の幅を指定する文字列（例：'10 5 3 10'）で指定。
      */
     
     /**
      * @cfg {Number/String} padding
-     * Specifies the padding for this component. The padding can be a single numeric value to apply to all sides or
-     * it can be a CSS style specification for each style, for example: '10 5 3 10'.
+		 * このコンポーネントのパディングを設定。パディングは全ての枠線（上下左右）に適用する1個の数字、あるいは
+		 * CSS方式で各辺のパディングを指定する文字列（例：'10 5 3 10'）で指定。
      */
     
     /**
      * @cfg {Number/String} margin
-     * Specifies the margin for this component. The margin can be a single numeric value to apply to all sides or
-     * it can be a CSS style specification for each style, for example: '10 5 3 10'.
+		 * このコンポーネントのマージンを設定。マージンは全ての枠線（上下左右）に適用する1個の数字、あるいは
+		 * CSS方式で各辺のマージンを指定する文字列（例：'10 5 3 10'）で指定。
      */
 
     /**
      * @cfg {Boolean} hidden
-     * Defaults to false.
+     * デフォルトはfalse。
      */
     hidden: false,
 
     /**
      * @cfg {Boolean} disabled
-     * Defaults to false.
+     * デフォルトはfalse。
      */
     disabled: false,
 
     /**
      * @cfg {Boolean} draggable
-     * Allows the component to be dragged via the touch event.
+		 * タッチイベントでのコンポーネントのドラッグの可否を設定。
      */
 
     /**
-     * Read-only property indicating whether or not the component can be dragged
+     * コンポーネントがドラッグ可能かどうかを表すプロパティ。読み取り専用。
      * @property draggable
      * @type {Boolean}
      */
@@ -191,70 +184,72 @@ Ext.lib.Component = Ext.extend(Ext.util.Observable, {
 
     /**
      * @cfg {Boolean} floating
-     * Create the Component as a floating and use absolute positioning.
-     * Defaults to false.
+		 * コンポーネントをフロート状態で生成。positionはabsolute設定。
+     * デフォルトはfalse。
      */
     floating: false,
 
     /**
      * @cfg {String} contentEl
-     * <p>Optional. Specify an existing HTML element, or the <code>id</code> of an existing HTML element to use as the content
-     * for this component.</p>
+     * <p>オプション。描画済みのHTML要素またはHTML要素の<code>id</code>をコンポーネントのコンテンツとして設定。</p>
      * <ul>
-     * <li><b>Description</b> :
-     * <div class="sub-desc">This config option is used to take an existing HTML element and place it in the layout element
-     * of a new component (it simply moves the specified DOM element <i>after the Component is rendered</i> to use as the content.</div></li>
-     * <li><b>Notes</b> :
-     * <div class="sub-desc">The specified HTML element is appended to the layout element of the component <i>after any configured
-     * {@link #html HTML} has been inserted</i>, and so the document will not contain this element at the time the {@link #render} event is fired.</div>
-     * <div class="sub-desc">The specified HTML element used will not participate in any <code><b>{@link Ext.Container#layout layout}</b></code>
-     * scheme that the Component may use. It is just HTML. Layouts operate on child <code><b>{@link Ext.Container#items items}</b></code>.</div>
-     * <div class="sub-desc">Add either the <code>x-hidden</code> or the <code>x-hide-display</code> CSS class to
-     * prevent a brief flicker of the content before it is rendered to the panel.</div></li>
+     * <li><b>解説</b>： 
+     * <div class="sub-desc">このオプションは描画済みのHTML要素を新しく生成するコンポーネントのレイアウト要素に
+		 * 取り込む際に利用します（実際には<i>コンポーネントが描画された後で</i>指定されたDOM要素をコンポーネント内に移動
+		 * させているだけです）。</div></li>
+     * <li><b>備考</b>：
+     * <div class="sub-desc">ここで指定されたHTML要素は、コンポーネント{@link #html HTML}オプションで設定されたものの追加が完了してから
+		 * 初めてレイアウト要素に追加されます。従って、コンポーネントの{@link #render}イベント発行時には、このHTML要素はまだコンポーネント
+		 * 内には存在していません。</div>
+     * <div class="sub-desc">また、ここで指定されたHTML要素はコンポーネントが利用する<code><b>{@link Ext.Container#layout レイアウト}</b></code>
+     * とは一切関わりを持ちません。単なる普通のHTMLだと考えてください。レイアウトはあくまでもコンテナの
+		 * <code><b>{@link Ext.Container#items items}</b></code>に対して適用されるものです。</div>
+     * <div class="sub-desc">このオプションを利用する際にはHTML要素が描画される際のチラツキを抑えるために、CSSクラスの<code>x-hidden</code>
+		 * または<code>x-hide-display</code>を追加してください。</div></li>
      * </ul>
      */
 
     /**
      * @cfg {String/Object} html
-     * An HTML fragment, or a {@link Ext.DomHelper DomHelper} specification to use as the layout element
-     * content (defaults to ''). The HTML content is added after the component is rendered,
-     * so the document will not contain this HTML at the time the {@link #render} event is fired.
-     * This content is inserted into the body <i>before</i> any configured {@link #contentEl} is appended.
+		 * コンポーネントのレイアウト要素にコンテンツとして追加するHTMLフラグメント、あるいは{@link Ext.DomHelper DomHelper}書式の
+		 * オブジェクトを設定（デフォルトは''）。HTMLコンテンツはコンポーネントの描画後に追加されるため、コンポーネントの{@link #render}
+		 * イベント発行時には、このHTML要素はまだコンポーネント内には存在していません。
+		 * ここで指定したコンテンツは{@link #contentEl}で指定したコンテンツより<i>先に</i>追加されます。
      */
 
     /**
      * @cfg {String} styleHtmlContent
-     * True to automatically style the html inside the content target of this component (body for panels).
-     * Defaults to false.
+		 * このコンポーネントの内部（Panelであればbody）に追加されるHTMLにスタイルを自動的に設定するかを指定。
+     * デフォルトはfalse。
      */
     styleHtmlContent: false,
 
     /**
      * @cfg {String} styleHtmlCls
-     * The class that is added to the content target when you set styleHtmlContent to true.
-     * Defaults to 'x-html'
+		 * styleHtmlContentをtrueに設定した場合に、HTMLコンテンツを内包するDOM要素に追加されるCSSクラス。
+     * デフォルトはx-html。
      */
     styleHtmlCls: 'x-html',
 
     /**
      * @cfg {Number} minHeight
-     * <p>The minimum value in pixels which this Component will set its height to.</p>
-     * <p><b>Warning:</b> This will override any size management applied by layout managers.</p>
+     * <p>このコンポーネントの最小の高さ。単位はピクセル。</p>
+     * <p><b>注意：</b>これを設定するとレイアウトマネージャーによるサイズ管理をオーバーライドします。</p>
      */
     /**
      * @cfg {Number} minWidth
-     * <p>The minimum value in pixels which this Component will set its width to.</p>
-     * <p><b>Warning:</b> This will override any size management applied by layout managers.</p>
+     * <p>このコンポーネントの最小幅。単位はピクセル。</p>
+     * <p><b>注意：</b>これを設定するとレイアウトマネージャーによるサイズ管理をオーバーライドします。</p>
      */
     /**
      * @cfg {Number} maxHeight
-     * <p>The maximum value in pixels which this Component will set its height to.</p>
-     * <p><b>Warning:</b> This will override any size management applied by layout managers.</p>
+     * <p>このコンポーネントの最大の高さ。単位はピクセル。</p>
+     * <p><b>注意：</b>これを設定するとレイアウトマネージャーによるサイズ管理をオーバーライドします。</p>
      */
     /**
      * @cfg {Number} maxWidth
-     * <p>The maximum value in pixels which this Component will set its width to.</p>
-     * <p><b>Warning:</b> This will override any size management applied by layout managers.</p>
+     * <p>このコンポーネントの最大幅。単位はピクセル。</p>
+     * <p><b>注意：</b>これを設定するとレイアウトマネージャーによるサイズ管理をオーバーライドします。</p>
      */
 
      // @private
@@ -267,15 +262,15 @@ Ext.lib.Component = Ext.extend(Ext.util.Observable, {
 
     /**
      * @cfg {Object/Array} plugins
-     * An object or array of objects that will provide custom functionality for this component.  The only
-     * requirement for a valid plugin is that it contain an init method that accepts a reference of type Ext.Component.
-     * When a component is created, if any plugins are available, the component will call the init method on each
-     * plugin, passing a reference to itself.  Each plugin can then call methods or respond to events on the
-     * component as needed to provide its functionality.
+		 * このコンポーネントに対して、カスタマイズされた機能を追加するためのオブジェクト、またはオブジェクトの配列。
+		 * プラグインの要件はExt.Componentへの参照を引数とするinitメソッドを備えていることです。
+		 * コンポーネント生成時にプラグインが設定されていると、コンポーネントはそれぞれのプラグインのinitメソッドを
+		 * 自分自身を引数として呼び出します。プラグインはそのタイミングで自分自身の別のメソッドを呼び出したり、イベント
+		 * リスナーの設定を行ったり、必要な処理を行うことになります。
      */
 
     /**
-     * Read-only property indicating whether or not the component has been rendered.
+     * コンポーネントが描画済みがどうかを表すプロパティ。読み取り専用。
      * @property rendered
      * @type {Boolean}
      */
