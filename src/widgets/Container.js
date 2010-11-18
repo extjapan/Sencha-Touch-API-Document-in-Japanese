@@ -94,9 +94,12 @@ Ext.Container = Ext.extend(Ext.lib.Container, {
         if (!this.fieldEventWrap)
             this.fieldEventWrap = {};
             
-        //TODO: remove the 'textarea' xtype here for the release of 1.0. This is a backwards-compatibility xtype only
         if (['textfield', 'passwordfield', 'emailfield',
-             'textarea', 'textareafield', 'searchfield', 'urlfield', 'numberfield', 'spinnerfield'].indexOf(item.xtype) !== -1) {
+             //<deprecated since=0.99>
+             'textarea',
+             //</deprecated>
+             'textareafield', 'searchfield', 'urlfield',
+             'numberfield', 'spinnerfield'].indexOf(item.xtype) !== -1) {
             if (isAdding) {
                 this.fieldEventWrap[item.id] = {
                     beforefocus: function(e) {this.onFieldBeforeFocus(item, e);},
@@ -170,17 +173,21 @@ Ext.Container = Ext.extend(Ext.lib.Container, {
 
         // Focus by mouse click or finger tap
         if (this.focusingField == field) {
+            if (Ext.is.iOS && window.pageYOffset == 0) {
+                window.scrollTo(0, 0);
+            }
+            
             var offsetContainerRegion = containerRegion.copy();
             offsetContainerRegion.bottom -= fieldSize.height;
             offsetContainerRegion.right -= fieldSize.width;
 
-            var outOfBoundDistance = offsetContainerRegion.getOutOfBoundOffset({
-                x: fieldRegion.left, y: fieldRegion.top
-            })
+            var outOfBoundDistance = new Ext.util.Offset(
+                offsetContainerRegion.left - scroller.offset.x, offsetContainerRegion.top - scroller.offset.top
+            );
 
-            if (outOfBoundDistance.x != 0 || outOfBoundDistance.y != 0) {
+            if (outOfBoundDistance.x > 0 || outOfBoundDistance.y > 0) {
                 this.adjustScroller(new Ext.util.Offset(
-                    scroller.offset.x, scroller.offset.y + outOfBoundDistance.y
+                    scroller.offset.x + outOfBoundDistance.x, scroller.offset.y + outOfBoundDistance.y
                 ));
             }
         }
@@ -281,11 +288,12 @@ Ext.Container = Ext.extend(Ext.lib.Container, {
         return this;
     },
     
-    //<debug>
+    //<deprecated since=0.99>
     setCard: function() {
-        throw new Error("Stateful: setCard has been deprecated. Please use setActiveItem.");
+        console.warn("Stateful: setCard has been deprecated. Please use setActiveItem.");
+        this.setActiveItem.apply(this, arguments);
     },
-    //</debug>
+    //</deprecated>
 
     /**
      * A template method that can be implemented by subclasses of

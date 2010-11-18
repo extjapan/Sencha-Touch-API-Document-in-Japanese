@@ -16,7 +16,7 @@ Ext.gesture.Gesture = Ext.extend(Object, {
         
         // <debug>
         if (!this.target) {
-            throw 'Trying to bind a ' + this.type + ' event to element that does\'nt exist: ' + this.target;
+            throw new Error('Trying to bind a ' + this.type + ' event to element that does\'nt exist: ' + this.target);
         }
         // </debug>
         
@@ -55,7 +55,7 @@ Ext.gesture.Gesture = Ext.extend(Object, {
         var listeners = this.listeners[type],
             ln = listeners && listeners.length,
             i;
-        
+
         if (!this.disableLocking && this.isLocked(type)) {
             return false;
         }

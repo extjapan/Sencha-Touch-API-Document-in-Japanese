@@ -139,7 +139,36 @@ Ext.layout.BoxLayout = Ext.extend(Ext.layout.ContainerLayout, {
  * @class Ext.layout.HBoxLayout
  * @extends Ext.layout.BoxLayout
  * <p>A layout that arranges items horizontally across a Container. This layout optionally divides available horizontal
- * space between child items containing a numeric <code>flex</code> configuration.</p>
+ * space between child items containing a numeric <code>flex</code> configuration. The flex option is a ratio that
+ * distributes width after any items with explicit widths have been accounted for. In the code below, the width is calculated
+ * as follows:
+ * <ul>
+ *     <li>The fixed width item is subtracted, leaving us with 300 width</li>
+ *     <li>The total flex number is counted, in this case, it is 3</li>
+ *     <li>The ratio is then calculated, 300 / 3 = 100</li>
+ *     <li>The first item has a flex of 2, so it is set to 2 * 100</li>
+ *     <li>The other remaining item is set to 1 * 100</li>
+ * </ul></p>
+ * <pre><code>
+new Ext.Container({
+    width: 400,
+    height: 300,
+    layout: {
+        type: 'hbox',
+        align: 'stretch'
+    },
+    items: [{
+        flex: 2,
+        html: 'First'
+    },{
+        width: 100,
+        html: 'Second'
+    },{
+        flex: 1,
+        html: 'Third'
+    }]
+});
+ * </code></pre>
  * This layout may also be used to set the heights of child items by configuring it with the {@link #align} option.
  */
 Ext.layout.HBoxLayout = Ext.extend(Ext.layout.BoxLayout, {
@@ -195,7 +224,36 @@ Ext.regLayout('hbox', Ext.layout.HBoxLayout);
  * @class Ext.layout.VBoxLayout
  * @extends Ext.layout.BoxLayout
  * <p>A layout that arranges items vertically down a Container. This layout optionally divides available vertical
- * space between child items containing a numeric <code>flex</code> configuration.</p>
+ * space between child items containing a numeric <code>flex</code> configuration. The flex option is a ratio that
+ * distributes height after any items with explicit heights have been accounted for. In the code below, the height is calculated
+ * as follows:
+ * <ul>
+ *   <li>The fixed height item is subtracted, leaving us with 300 height</li>
+ *   <li>The total flex number is counted, in this case, it is 3</li>
+ *   <li>The ratio is then calculated, 300 / 3 = 100</li>
+ *   <li>The first item has a flex of 2, so it is set to 2 * 100</li>
+ *   <li>The other remaining item is set to 1 * 100</li>
+ * </ul></p>
+ * <pre><code>
+new Ext.Container({
+    width: 300,
+    height: 400,
+    layout: {
+        type: 'vbox',
+        align: 'stretch'
+    },
+    items: [{
+        flex: 2,
+        html: 'First'
+    },{
+        width: 100,
+        html: 'Second'
+    },{
+        flex: 1,
+        html: 'Third'
+    }]
+});
+ * </code></pre>
  * This layout may also be used to set the widths of child items by configuring it with the {@link #align} option.
  */
 Ext.layout.VBoxLayout = Ext.extend(Ext.layout.BoxLayout, {

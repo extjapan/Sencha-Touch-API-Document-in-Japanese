@@ -12,6 +12,7 @@ Ext.form.Url = Ext.extend(Ext.form.Text, {
 
 Ext.reg('urlfield', Ext.form.Url);
 
+//<deprecated since=0.99>
 /**
  * @class Ext.form.UrlField
  * @extends Ext.form.Url
@@ -26,3 +27,4 @@ Ext.form.UrlField = Ext.extend(Ext.form.Url, {
         Ext.form.UrlField.superclass.constructor.apply(this, arguments);
     }
 });
+//</deprecated>

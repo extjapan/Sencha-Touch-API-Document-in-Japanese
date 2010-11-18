@@ -53,9 +53,9 @@ Ext.form.Slider = Ext.extend(Ext.form.Field, {
     maxValue: 100,
 
     /**
-     * @cfg {Number} animate When set to a number greater than 0, it will be the animation duration in ms, defaults to 200
+     * @cfg {Number} animationDuration When set to a number greater than 0, it will be the animation duration in ms, defaults to 200
      */
-    animate: 200,
+    animationDuration: 200,
 
     /**
      * @cfg {Number} value The value to initialize the thumb at (defaults to 0)
@@ -70,12 +70,10 @@ Ext.form.Slider = Ext.extend(Ext.form.Field, {
     trackWidth: null,
 
     monitorOrientation: true,
-
-    tabIndex: -1,
      
     renderTpl: [
         '<tpl if="label">',
-            '<label <tpl if="fieldEl">for="{inputId}"</tpl> class="x-form-label"><span>{label}</span></label>',
+            '<div class="x-form-label"><span>{label}</span></div>',
         '</tpl>',
         '<tpl if="fieldEl">',
             '<div id="{inputId}" name="{name}" class="{fieldCls}"',
@@ -149,35 +147,41 @@ Ext.form.Slider = Ext.extend(Ext.form.Field, {
 
     // @private
     initComponent: function() {
-        var me = this;
+        this.tabIndex = -1;
+
+        if (this.increment == 0) {
+            this.increment = 1;
+        }
+
+        this.increment = Math.abs(this.increment);
         
         //TODO: This will be removed once multi-thumb support is in place - at that point a 'values' config will be accepted
         //to create the multiple thumbs
-        me.values = [me.value];
+        this.values = [this.value];
 
-        Ext.form.Slider.superclass.initComponent.apply(me, arguments);
+        Ext.form.Slider.superclass.initComponent.apply(this, arguments);
 
-        if (me.thumbs == undefined) {
+        if (this.thumbs == undefined) {
             var thumbs = [],
-                values = me.values,
+                values = this.values,
                 length = values.length,
                 i,
-                Thumb = me.getThumbClass();
+                Thumb = this.getThumbClass();
 
             for (i = 0; i < length; i++) {
                 thumbs[thumbs.length] = new Thumb({
                     value: values[i],
-                    slider: me,
+                    slider: this,
 
                     listeners: {
-                        scope  : me,
-                        drag   : me.onDrag,
-                        dragend: me.onThumbDragEnd
+                        scope  : this,
+                        drag   : this.onDrag,
+                        dragend: this.onThumbDragEnd
                     }
                 });
             }
 
-            me.thumbs = thumbs;
+            this.thumbs = thumbs;
         }
     },
 
@@ -200,27 +204,34 @@ Ext.form.Slider = Ext.extend(Ext.form.Field, {
      * Sets the new value of the slider, constraining it within {@link minValue} and {@link maxValue}, and snapping to the nearest
      * {@link increment} if set
      * @param {Number} value The new value
-     * @param {Boolean} moveThumb Whether or not to move the thumb as well
-     * @param {Number} animate Animation duration, 0 for no animation
-     * @return {Number} The value the thumb was set to
+     * @param {Number} animationDuration Animation duration, 0 for no animation
+     * @param {Boolean} moveThumb Whether or not to move the thumb as well. Defaults to true
+     * @return {Ext.form.Slider} this This Slider
      */
-    setValue: function(value, moveThumb, animate) {
-        //TODO: this should accept a second argument referencing which thumb to move
-        var me       = this,
-            thumb    = me.getThumb(),
-            oldValue = thumb.getValue(),
-            newValue = me.constrain(value);
+    setValue: function(value, animationDuration, moveThumb) {
+        if (typeof moveThumb == 'undefined') {
+            moveThumb = true;
+        }
 
-        if (me.fireEvent('beforechange', me, thumb, newValue, oldValue) !== false) {
+        moveThumb = !!moveThumb;
+        
+        //TODO: this should accept a second argument referencing which thumb to move
+        var thumb    = this.getThumb(),
+            oldValue = thumb.getValue(),
+            newValue = this.constrain(value);
+
+        if (this.fireEvent('beforechange', this, thumb, newValue, oldValue) !== false) {
             if (moveThumb) {
-                me.moveThumb(thumb, me.getPixelValue(newValue, thumb), animate);
+                this.moveThumb(thumb, this.getPixelValue(newValue, thumb), animationDuration);
             }
             
             thumb.setValue(newValue);
-            me.doComponentLayout();
+            this.doComponentLayout();
 
-            me.fireEvent('change', me, thumb, newValue, oldValue);
+            this.fireEvent('change', this, thumb, newValue, oldValue);
         }
+
+        return this;
     },
 
     /**
@@ -232,14 +243,18 @@ Ext.form.Slider = Ext.extend(Ext.form.Field, {
      * @return {Number} The snapped value
      */
     constrain: function(value) {
-        var increment = this.increment,
-        div = Math.floor(Math.abs(value / increment)),
-        lower = this.minValue + (div * increment),
-        higher = Math.min(lower + increment, this.maxValue),
-        dLower = value - lower,
-        dHigher = higher - value;
+        var remainder = value % this.increment;
 
-        return (dLower < dHigher) ? lower: higher;
+        value -= remainder;
+
+        if (Math.abs(remainder) >= (this.increment / 2)) {
+            value += (remainder > 0) ? this.increment : -this.increment;
+        }
+
+        value = Math.max(this.minValue, value);
+        value = Math.min(this.maxValue, value);
+
+        return value;
     },
 
     /**
@@ -315,11 +330,10 @@ Ext.form.Slider = Ext.extend(Ext.form.Field, {
      * Updates a thumb after it has been dragged
      */
     onThumbDragEnd: function(draggable) {
-        var value = this.getThumbValue(draggable),
-            me = this;
+        var value = this.getThumbValue(draggable);
 
-        me.setValue(value, true);
-        me.fireEvent('dragend', me, draggable.thumb, me.constrain(value));
+        this.setValue(value);
+        this.fireEvent('dragend', this, draggable.thumb, this.constrain(value));
     },
 
     /**
@@ -352,7 +366,7 @@ Ext.form.Slider = Ext.extend(Ext.form.Field, {
                 thumb = this.getNearest(leftOffset),
                 halfThumbWidth = thumb.dragObj.size.width / 2;
 
-            this.setValue(this.getSliderValue(leftOffset - halfThumbWidth, thumb), true, this.animate);
+            this.setValue(this.getSliderValue(leftOffset - halfThumbWidth, thumb), this.animationDuration, true);
         }
     },
 
@@ -361,10 +375,10 @@ Ext.form.Slider = Ext.extend(Ext.form.Field, {
      * Moves the thumb element. Should only ever need to be called from within {@link setValue}
      * @param {Ext.form.Slider.Thumb} thumb The thumb to move
      * @param {Number} pixel The pixel the thumb should be centered on
-     * @param {Boolean} animate True to animate the movement
+     * @param {Boolean} animationDuration True to animationDuration the movement
      */
-    moveThumb: function(thumb, pixel, animate) {
-        thumb.dragObj.setOffset(new Ext.util.Offset(pixel, 0), animate);
+    moveThumb: function(thumb, pixel, animationDuration) {
+        thumb.dragObj.setOffset(new Ext.util.Offset(pixel, 0), animationDuration);
     },
 
     // inherit docs
@@ -425,8 +439,11 @@ Ext.form.Slider = Ext.extend(Ext.form.Field, {
     }
 });
 
-Ext.reg('slider', Ext.form.Slider);
+Ext.reg('sliderfield', Ext.form.Slider);
 
+//<deprecated since=1.0>
+Ext.reg('slider', Ext.form.Slider);
+//</deprecated>
 /**
  * @class Ext.form.Slider.Thumb
  * @extends Ext.form.Field
@@ -455,7 +472,6 @@ Ext.form.Slider.Thumb = Ext.extend(Ext.form.Field, {
             direction: 'horizontal',
             constrain: this.slider.fieldEl,
             revert: false,
-            useCssTransform: true,
             thumb: this
         };
 
@@ -465,6 +481,8 @@ Ext.form.Slider.Thumb = Ext.extend(Ext.form.Field, {
     // inherit docs
     setValue: function(newValue) {
         this.value = newValue;
+
+        return this;
     },
 
     // inherit docs
@@ -475,5 +493,7 @@ Ext.form.Slider.Thumb = Ext.extend(Ext.form.Field, {
 
 Ext.reg('sliderthumb', Ext.form.Slider.Thumb);
 
+//<deprecated since=0.99>
 //DEPRECATED - remove this in 1.0. See RC1 Release Notes for details
 Ext.reg('thumb', Ext.form.Slider.Thumb);
+//</deprecated>

@@ -42,53 +42,29 @@ Ext.util.Observable = Ext.extend(Object, {
     * <br><p><b><u>ExtJs {@link Ext.Component コンポーネント}が発行するDOMイベント</u></b></p>
     * <br><p><i>一部の</i>ExtJsコンポーネントクラスでは特定のDOMイベント（例：click、mouseoverなど）を発行しますが、これは付加情報をあわせて
 		* 渡したい場合に限られています。例えば、 {@link Ext.DataView DataView}クラスの <b><code>{@link Ext.DataView#click click}</code></b>イベント
-		* ではクリックされたノードの情報が渡されます。コンポーネントを構成するHTMLElementそのもののDOMイベントを拾いたい場合は、コンポーネントが描画
-		* された後で<i>{@link Ext.Component#getEl Element}</i>に対してリスナーを追加する必要があります。この処理は、プラグインを使えば簡単です：
-      <pre><code>
-// プラグインにはlistenersオブジェクトがコンフィグオプションとして渡される。
-// 対象となるコンポーネントは全てのリスナー関数の引数として追加される。
-Ext.DomObserver = Ext.extend(Object, {
-    constructor: function(config) {
-        this.listeners = config.listeners ? config.listeners : config;
-    },
+		* ではクリックされたノードの情報が渡されます。コンポーネントを構成するエレメントそのもののDOMイベントを拾いたい場合は、明示的に指定する必要
+		* があります：
 
-    // コンポーネントは（その仕組上）プラグインのinitメソッドの引数として自分自身を渡します
-    init: function(c) {
-        var p, l = this.listeners;
-        for (p in l) {
-            if (Ext.isFunction(l[p])) {
-                l[p] = this.createHandler(l[p], c);
-            } else {
-                l[p].fn = this.createHandler(l[p].fn, c);
-            }
+    * <pre><code>
+new Ext.Panel({
+    width: 400,
+    height: 200,
+    dockedItems: [{
+        xtype: 'toolbar'
+    }],
+    listeners: {
+        click: {
+            element: 'el', // パネルの構成要素「el」のイベントを拾う
+            fn: function(){ console.log('click el'); }
+        },
+        dblclick: {
+            element: 'body', // パネルの構成要素「body」のイベントを拾う
+            fn: function(){ console.log('dblclick body'); }
         }
-
-        // コンポーネントのrenderメソッドが呼ばれた直後にElementにリスナーを設定
-        c.render = {@link Ext.util.Functions.createSequence}(c.render, function() {
-            var e = c.getEl();
-            if (e) {
-                e.on(l);
-            }
-        });
-    },
-
-    createHandler: function(fn, c) {
-        return function(e) {
-            fn.call(this, e, c);
-        };
     }
 });
-
-var text = new Ext.form.Text({
-
-    // Elementがクリックされた際にコンポーネント自身を閉じるように設定
-    plugins: [ new Ext.DomObserver({
-        click: function(evt, comp) {
-            comp.collapse();
-        }
-    })]
-});
-      </code></pre></p>
+</code></pre>
+    * </p>
     */
     // @private
     isObservable: true,
@@ -252,6 +228,7 @@ var text = new Ext.form.Text({
 		 * 実行される。</div></li>
      * <li><b>target</b> : Observable<div class="sub-desc">ここで指定したオブジェクト上で発行された場合にのみイベントリスナーを実行。内包するObservable
 		 * オブジェクトから上がってきたイベントは無視。</div></li>
+     * <li><b>element</b> : String<div class="sub-desc">The element reference on the component to bind the event to. This is used to bind DOM events to underlying elements on {@link Ext.Component Components}. - This option is only valid for listeners bound to {@link Ext.Component Components}</div></li>
      * </ul><br>
      * <p>
      * <b>オプションの組み合わせ</b><br>
@@ -296,7 +273,7 @@ delay: 100
         }
     },
 
-    /**
+     /**
      * イベントリスナーを削除。
      * @param {String}   eventName イベントリスナーが設定されているイベント名
      * @param {Function} handler   削除するリスナー。<b> {@link #addListener}メソッドに渡した関数への参照を渡す必要があります。</b>
@@ -356,7 +333,7 @@ delay: 100
     },
     //</debug>
 
-    /**
+   /**
      * {@link #addManagedListener}で追加されたイベントリスナーを削除
      */
     clearManagedListeners : function() {

@@ -123,6 +123,11 @@ Ext.util.Region = Ext.extend(Object, {
 
     },
 
+    /**
+     * Get the offset amount on the x-axis
+     * @param {Number} p the offset
+     * @return {Number}
+     */
     getOutOfBoundOffsetX: function(p) {
         if (p <= this.left) {
             return this.left - p;
@@ -133,6 +138,11 @@ Ext.util.Region = Ext.extend(Object, {
         return 0;
     },
 
+    /**
+     * Get the offset amount on the y-axis
+     * @param {Number} p the offset
+     * @return {Number}
+     */
     getOutOfBoundOffsetY: function(p) {
         if (p <= this.top) {
             return this.top - p;
@@ -143,6 +153,12 @@ Ext.util.Region = Ext.extend(Object, {
         return 0;
     },
 
+    /**
+     * Check whether the point / offset is out of bound
+     * @param {String} axis optional
+     * @param {Ext.util.Point/Number} p the point / offset
+     * @return {Boolean}
+     */
     isOutOfBound: function(axis, p) {
         if (!Ext.isObject(axis)) {
             if (axis == 'x') {
@@ -156,10 +172,20 @@ Ext.util.Region = Ext.extend(Object, {
         }
     },
 
+    /**
+     * Check whether the offset is out of bound in the x-axis
+     * @param {Number} p the offset
+     * @return {Boolean}
+     */
     isOutOfBoundX: function(p) {
         return (p < this.left || p > this.right);
     },
 
+    /**
+     * Check whether the offset is out of bound in the y-axis
+     * @param {Number} p the offset
+     * @return {Boolean}
+     */
     isOutOfBoundY: function(p) {
         return (p < this.top || p > this.bottom);
     },
@@ -169,9 +195,9 @@ Ext.util.Region = Ext.extend(Object, {
      * @param {String} axis Optional
      * @param {Ext.util.Point/Ext.util.Offset/Object} p
      * @param {Number} factor
+     * @return {Ext.util.Point/Ext.util.Offset/Object/Number}
      */
     restrict: function(axis, p, factor) {
-
         if (Ext.isObject(axis)) {
             var newP;
 
@@ -200,6 +226,12 @@ Ext.util.Region = Ext.extend(Object, {
         }
     },
 
+    /*
+     * Restrict an offset within the region by a certain factor, on the x-axis
+     * @param {Number} p
+     * @param {Number} factor The factor, optional, defaults to 1
+     * @return
+     */
     restrictX : function(p, factor) {
         if (!factor) {
             factor = 1;
@@ -214,6 +246,11 @@ Ext.util.Region = Ext.extend(Object, {
         return p;
     },
 
+    /*
+     * Restrict an offset within the region by a certain factor, on the y-axis
+     * @param {Number} p
+     * @param {Number} factor The factor, optional, defaults to 1
+     */
     restrictY : function(p, factor) {
         if (!factor) {
             factor = 1;
@@ -228,6 +265,10 @@ Ext.util.Region = Ext.extend(Object, {
         return p;
     },
 
+    /*
+     * Get the width / height of this region
+     * @return {Object} an object with width and height properties
+     */
     getSize: function() {
         return {
             width: this.right - this.left,
@@ -251,13 +292,25 @@ Ext.util.Region = Ext.extend(Object, {
         return "Region[" + this.top + "," + this.right + "," + this.bottom + "," + this.left + "]";
     },
 
+
+    /**
+     * Translate this region by the given offset amount
+     * @param {Ext.util.Offset/Object} offset
+     * @return {Ext.util.Region} this This Region
+     */
     translateBy: function(offset) {
         this.left += offset.x;
         this.right += offset.x;
         this.top += offset.y;
         this.bottom += offset.y;
+
+        return this;
     },
 
+    /**
+     * Round all the properties of this region
+     * @return {Ext.util.Region} this This Region
+     */
     round: function() {
         this.top = Math.round(this.top);
         this.right = Math.round(this.right);
@@ -265,6 +318,15 @@ Ext.util.Region = Ext.extend(Object, {
         this.left = Math.round(this.left);
 
         return this;
+    },
+
+    /**
+     * Check whether this region is equivalent to the given region
+     * @param {Ext.util.Region} region The region to compare with
+     * @return {Boolean}
+     */
+    equals: function(region) {
+        return (this.top == region.top && this.right == region.right && this.bottom == region.bottom && this.left == region.left)
     }
 });
 
@@ -279,6 +341,11 @@ Ext.util.Region.getRegion = function(el) {
     return Ext.fly(el).getPageBox(true);
 };
 
+/**
+ * @static
+ * @param {Object} o An object with top, right, bottom, left properties
+ * @returns {Ext.util.Region} region The region constructed based on the passed object
+ */
 Ext.util.Region.from = function(o) {
     return new Ext.util.Region(o.top, o.right, o.bottom, o.left);
 };

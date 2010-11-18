@@ -1,6 +1,6 @@
 /**
  * @class Ext.form.Number
- * @extends Ext.form.Field
+ * @extends Ext.form.Text
  * <p>Wraps an HTML5 number field. See {@link Ext.form.FormPanel FormPanel} for example usage.</p>
  * @xtype numberfield
  */
@@ -16,7 +16,7 @@ Ext.form.Number = Ext.extend(Ext.form.Text, {
     stepValue : undefined,
 
     renderTpl: [
-        '<tpl if="label"><label <tpl if="fieldEl">for="{inputId}"</tpl> class="x-form-label"><span>{label}</span></label></tpl>',
+        '<tpl if="label"><div class="x-form-label"><span>{label}</span></div></tpl>',
         '<tpl if="fieldEl"><div class="x-form-field-container">',
             '<input id="{inputId}" type="{inputType}" name="{name}" class="{fieldCls}"',
                 '<tpl if="tabIndex">tabIndex="{tabIndex}" </tpl>',
@@ -48,6 +48,7 @@ Ext.form.Number = Ext.extend(Ext.form.Text, {
 
 Ext.reg('numberfield', Ext.form.Number);
 
+//<deprecated since=0.99>
 /**
  * @class Ext.form.NumberField
  * @extends Ext.form.Number
@@ -62,3 +63,4 @@ Ext.form.NumberField = Ext.extend(Ext.form.Number, {
         Ext.form.NumberField.superclass.constructor.apply(this, arguments);
     }
 });
+//</deprecated>

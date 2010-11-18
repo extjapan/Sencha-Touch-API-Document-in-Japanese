@@ -1,16 +1,21 @@
 /**
  * @class Ext.util.Draggable
  * @extends Ext.util.Observable
+ * A core util class to bring Draggable behavior to any DOM element, acts as a base class for Scroller and Sortable
  * @constructor
  * @param {Mixed} el The element you want to make draggable.
  * @param {Object} config The configuration object for this Draggable.
  */
 Ext.util.Draggable = Ext.extend(Ext.util.Observable, {
     baseCls: 'x-draggable',
+
     draggingCls: 'x-dragging',
+
     proxyCls: 'x-draggable-proxy',
 
+    // @private
     outOfBoundRestrictFactor: 1,
+
     /**
      * @cfg {String} direction
      * Possible values: 'vertical', 'horizontal', or 'both'
@@ -19,7 +24,7 @@ Ext.util.Draggable = Ext.extend(Ext.util.Observable, {
     direction: 'both',
 
     /**
-     * @cfg {Element/Mixed} constrain Can be either an Element, 'parent' or null for no constrain
+     * @cfg {Element/Mixed} constrain Can be either a DOM element, an instance of Ext.Element, 'parent' or null for no constrain
      */
     constrain: window,
 
@@ -46,11 +51,15 @@ Ext.util.Draggable = Ext.extend(Ext.util.Observable, {
 
     /**
      * @cfg {Boolean} disabled
+     * Whether or not the draggable behavior is disabled on instantiation
+     * Defaults to false
      */
     disabled: false,
 
     /**
      * @cfg {Boolean} revert
+     * Whether or not the element or it's proxy will be reverted back (with animation)
+     * when it's not dropped and held by a Droppable
      */
     revert: false,
 
@@ -62,13 +71,16 @@ Ext.util.Draggable = Ext.extend(Ext.util.Observable, {
     group: 'base',
 
     /**
-     * @cfg {Ext.Element/Element} eventTarget
-     * The element to actually bind touch events to, defaults to this class' element itself
+     * @cfg {Ext.Element/Element/String} eventTarget
+     * The element to actually bind touch events to, the only string accepted is 'parent'
+     * for convenience.
+     * Defaults to this class' element itself
      */
 
     /**
      * @cfg {Boolean} useCssTransform
-     * Whether or not to translate the element using CSS Transform (much faster) instead of left and top properties, defaults to true
+     * Whether or not to translate the element using CSS Transform (much faster) instead of
+     * left and top properties, defaults to true
      */
     useCssTransform: true,
 
@@ -107,14 +119,15 @@ Ext.util.Draggable = Ext.extend(Ext.util.Observable, {
      */
     horizontal: false,
 
-    monitorOrientation : true,
-    
     /**
      * How long animations for this draggable take by default when using setOffset with animate being true.
      * This defaults to 300.
      * @type Number
      */
     animationDuration: 300,
+
+    // @private
+    monitorOrientation: true,
 
     constructor: function(el, config) {
         this.el = Ext.get(el);
@@ -134,8 +147,6 @@ Ext.util.Draggable = Ext.extend(Ext.util.Observable, {
         );
 
         Ext.util.Draggable.superclass.constructor.call(this, config);
-
-        this.offset = new Ext.util.Offset();
 
         if (this.eventTarget === 'parent') {
             this.eventTarget = this.el.parent();
@@ -157,7 +168,7 @@ Ext.util.Draggable = Ext.extend(Ext.util.Observable, {
         this.el.addCls(this.baseCls);
 
         if (this.proxy) {
-            this.proxy.addCls(this.proxyCls);
+            this.getProxyEl().addCls(this.proxyCls);
         }
 
         this.startEventName = (this.delay > 0) ? 'taphold' : 'dragstart';
@@ -169,7 +180,7 @@ Ext.util.Draggable = Ext.extend(Ext.util.Observable, {
         this.container = window;
 
         if (this.constrain) {
-            if (this.constrain == 'parent') {
+            if (this.constrain === 'parent') {
                 this.container = this.el.parent();
             }
             else if (this.constrain !== window) {
@@ -183,22 +194,20 @@ Ext.util.Draggable = Ext.extend(Ext.util.Observable, {
             x: new Ext.util.Draggable.Animation.Linear(),
             y: new Ext.util.Draggable.Animation.Linear()
         };
-        
-        Ext.EventManager.onOrientationChange(this.onOrientationChange, this);
-        
+
         this.updateBoundary(true);
         this.setDragging(false);
 
         if (!this.disabled) {
             this.enable();
         }
-        
+
         return this;
     },
-    
+
     /**
      * Enable the Draggable.
-     * @return {Ext.util.Draggable} this Returns this draggable instance
+     * @return {Ext.util.Draggable} this This Draggable instance
      */
     enable: function() {
         return this.setEnabled(true);
@@ -206,7 +215,7 @@ Ext.util.Draggable = Ext.extend(Ext.util.Observable, {
 
     /**
      * Disable the Draggable.
-     * @return {Ext.util.Draggable} this Returns this draggable instance
+     * @return {Ext.util.Draggable} this This Draggable instance
      */
     disable: function() {
         return this.setEnabled(false);
@@ -216,15 +225,22 @@ Ext.util.Draggable = Ext.extend(Ext.util.Observable, {
      * Combined method to disable or enable the Draggable. This method is called by the enable and
      * disable methods.
      * @param {Boolean} enabled True to enable, false to disable. Defaults to false.
-     * @return {Ext.util.Draggable} this Returns this draggable instance
+     * @return {Ext.util.Draggable} this This Draggable instance
      */
     setEnabled: function(enabled) {
         this.eventTarget[enabled ? 'on' : 'un'](this.startEventName, this.onStart, this, this.dragOptions);
         this.eventTarget[enabled ? 'on' : 'un']('drag', this.onDrag, this, this.dragOptions);
         this.eventTarget[enabled ? 'on' : 'un']('dragend', this.onDragEnd, this, this.dragOptions);
-        
+        this.eventTarget[enabled ? 'on' : 'un']('touchstart', this.onTouchStart, this);
+
+        if (enabled) {
+            Ext.EventManager.onOrientationChange(this.onOrientationChange, this);
+        } else {
+            Ext.EventManager.orientationEvent.removeListener(this.onOrientationChange, this);
+        }
+
         this.disabled = !enabled;
-        
+
         return this;
     },
 
@@ -232,17 +248,17 @@ Ext.util.Draggable = Ext.extend(Ext.util.Observable, {
      * Change the Draggable to use css transforms instead of style offsets
      * or the other way around.
      * @param {Boolean} useCssTransform True to use css transforms instead of style offsets.
-     * @return {Ext.util.Draggable} this Returns this draggable instance
+     * @return {Ext.util.Draggable} this This Draggable instance
      * @public
      */
     setUseCssTransform: function(useCssTransform) {
         if (typeof useCssTransform == 'undefined') {
             useCssTransform = true;
         }
-        
+
         if (useCssTransform != this.useCssTransform) {
             this.useCssTransform = useCssTransform;
-            
+
             var resetOffset = new Ext.util.Offset();
 
             if (useCssTransform == false) {
@@ -258,100 +274,104 @@ Ext.util.Draggable = Ext.extend(Ext.util.Observable, {
     },
 
     /**
-     * Sets the offset of this Draggable relative to its original offset.
-     * @param {Ext.util.Point/Object} point An object or Ext.util.Point instance containing the
+     * Sets the offset of this Draggable relatively to its original offset.
+     * @param {Ext.util.Offset/Object} offset An object or Ext.util.Offset instance containing the
      * x and y coordinates.
-     * @param {Boolean/Number} animate Wether or not to animate the setting of the offset. True
+     * @param {Boolean/Number} animate Whether or not to animate the setting of the offset. True
      * to use the default animationDuration, a number to specify the duration for this operation.
-     * @return {Ext.util.Draggable} this Returns this draggable instance
+     * @return {Ext.util.Draggable} this This Draggable instance
      */
-    setOffset: function(point, animate) {
+    setOffset: function(offset, animate) {
         if (!this.horizontal) {
-            point.x = 0;
+            offset.x = 0;
         }
 
         if (!this.vertical) {
-            point.y = 0;
+            offset.y = 0;
         }
 
         if (animate) {
-            this.startAnimation(point, animate);
+            this.startAnimation(offset, animate);
         }
         else {
-            this.offset = point;
+            this.offset = offset;
             this.region = new Ext.util.Region(
-                this.initialRegion.top + point.y,
-                this.initialRegion.right + point.x,
-                this.initialRegion.bottom + point.y,
-                this.initialRegion.left + point.x
+                this.initialRegion.top + offset.y,
+                this.initialRegion.right + offset.x,
+                this.initialRegion.bottom + offset.y,
+                this.initialRegion.left + offset.x
             );
 
             if (this.useCssTransform) {
-                this.setTransformOffset(point);
-            } 
-            else {
-                this.setStyleOffset(point);
+                this.setTransformOffset(offset);
             }
-            
+            else {
+                this.setStyleOffset(offset);
+            }
+
             this.fireEvent('offsetchange', this, this.offset);
         }
-        
+
         return this;
     },
 
     /**
      * Internal method that sets the transform of the proxyEl.
-     * @param {Ext.util.Point/Object} point An object or Ext.util.Point instance containing the
+     * @param {Ext.util.Offset/Object} offset An object or Ext.util.Offset instance containing the
      * x and y coordinates for the transform.
-     * @return {Ext.util.Draggable} this Returns this draggable instance
+     * @return {Ext.util.Draggable} this This Draggable instance
      * @private
      */
-    setTransformOffset: function(point) {
-        Ext.Element.cssTransform(this.getProxyEl(), {translate: [point.x, point.y]});
+    setTransformOffset: function(offset) {
+//        Ext.Element.cssTransform(this.getProxyEl(), {translate: [offset.x, offset.y]});
+        // Temporarily use this instead of Ext.Element.cssTransform to save some CPU
+        Ext.Element.cssTranslate(this.getProxyEl(), offset);
+
         return this;
     },
 
     /**
      * Internal method that sets the left and top of the proxyEl.
-     * @param {Ext.util.Point/Object} point An object or Ext.util.Point instance containing the
+     * @param {Ext.util.Offset/Object} offset An object or Ext.util.Offset instance containing the
      * x and y coordinates.
-     * @return {Ext.util.Draggable} this Returns this draggable instance
+     * @return {Ext.util.Draggable} this This Draggable instance
      * @private
      */
-    setStyleOffset: function(p) {
-        this.getProxyEl().setLeft(p.x);
-        this.getProxyEl().setTop(p.y);
+    setStyleOffset: function(offset) {
+        this.getProxyEl().setLeft(offset.x);
+        this.getProxyEl().setTop(offset.y);
         return this;
     },
 
     /**
      * Internal method that sets the offset of the Draggable using an animation
-     * @param {Ext.util.Point/Object} point An object or Ext.util.Point instance containing the
+     * @param {Ext.util.Offset/Object} offset An object or Ext.util.Offset instance containing the
      * x and y coordinates for the transform.
-     * @param {Boolean/Number} animate Wether or not to animate the setting of the offset. True
+     * @param {Boolean/Number} animate Whether or not to animate the setting of the offset. True
      * to use the default animationDuration, a number to specify the duration for this operation.
-     * @return {Ext.util.Draggable} this Returns this draggable instance
+     * @return {Ext.util.Draggable} this This Draggable instance
      * @private
      */
-    startAnimation: function(p, animate) {
-        var currentTime = (new Date()).getTime();
+    startAnimation: function(offset, animate) {
+        this.stopAnimation();
 
+        var currentTime = Date.now();
         animate = Ext.isNumber(animate) ? animate : this.animationDuration;
-            
+
         this.linearAnimation.x.set({
             startOffset: this.offset.x,
-            endOffset: p.x,
+            endOffset: offset.x,
             startTime: currentTime,
             duration: animate
         });
-        
+
         this.linearAnimation.y.set({
             startOffset: this.offset.y,
-            endOffset: p.y,
+            endOffset: offset.y,
             startTime: currentTime,
             duration: animate
         });
-        
+
         this.isAnimating = true;
         this.animationTimer = Ext.defer(this.handleAnimationFrame, 0, this);
         return this;
@@ -360,27 +380,34 @@ Ext.util.Draggable = Ext.extend(Ext.util.Observable, {
     /**
      * Internal method that stops the current offset animation
      * @private
-     */    
+     */
     stopAnimation: function() {
-        clearTimeout(this.animationTimer);
-        this.isAnimating = false;
-        this.setDragging(false);
+        if (this.isAnimating) {
+            clearTimeout(this.animationTimer);
+            this.isAnimating = false;
+            this.setDragging(false);
+        }
+
         return this;
     },
 
     /**
      * Internal method that handles a frame of the offset animation.
      * @private
-     */    
+     */
     handleAnimationFrame: function() {
+        if (!this.isAnimating) {
+            return;
+        }
+
         var newOffset = new Ext.util.Offset();
         newOffset.x = this.linearAnimation.x.getOffset();
         newOffset.y = this.linearAnimation.y.getOffset();
 
         this.setOffset(newOffset);
-        
+
         this.animationTimer = Ext.defer(this.handleAnimationFrame, 10, this);
-        
+
         if ((newOffset.x === this.linearAnimation.x.endOffset) && (newOffset.y === this.linearAnimation.y.endOffset)) {
             this.stopAnimation();
         }
@@ -388,7 +415,7 @@ Ext.util.Draggable = Ext.extend(Ext.util.Observable, {
 
     /**
      * Returns the current offset relative to the original location of this Draggable.
-     * @return {Ext.util.Point} offset An Ext.util.Point instance containing the offset.
+     * @return {Ext.util.Offset} offset An Ext.util.Offset instance containing the offset.
      */
     getOffset: function() {
         var offset = this.offset.copy();
@@ -401,14 +428,16 @@ Ext.util.Draggable = Ext.extend(Ext.util.Observable, {
      * Updates the boundary information for this Draggable. This method shouldn't
      * have to be called by the developer and is mostly used for internal purposes.
      * Might be useful when creating subclasses of Draggable.
-     * @return {Ext.util.Draggable} this Returns this draggable instance
+     * @param {Boolean} init Whether or not this is happing during instantiation, which we need
+     * to apply the transform / style to the DOM element
+     * @return {Ext.util.Draggable} this This Draggable instance
      * @private
      */
     updateBoundary: function(init) {
+        var offsetBoundary;
+
         if (typeof init == 'undefined')
             init = false;
-        
-        this.offsetBoundary = null;
 
         this.size = {
             width: this.el.dom.scrollWidth,
@@ -478,7 +507,13 @@ Ext.util.Draggable = Ext.extend(Ext.util.Observable, {
             bottom += this.containerBox.bottom - this.elBox.bottom;
         }
 
-        this.offsetBoundary = new Ext.util.Region(top, right, bottom, left).round();
+        offsetBoundary = new Ext.util.Region(top, right, bottom, left).round();
+
+        if (this.offsetBoundary && this.offsetBoundary.equals(offsetBoundary)) {
+            return this;
+        }
+
+        this.offsetBoundary = offsetBoundary;
 
         var currentComputedOffset;
 
@@ -495,18 +530,23 @@ Ext.util.Draggable = Ext.extend(Ext.util.Observable, {
         return this;
     },
 
+    // @private
+    onTouchStart: function() {
+
+    },
+
     /**
      * Fires when the Drag operation starts. Internal use only.
      * @param {Event} e The event object for the drag operation
      * @private
      */
     onStart: function(e) {
-        if (e.targetTouches && e.targetTouches.length != 1)
-            return;
-        
+        this.updateBoundary();
+
+        this.stopAnimation();
+
         if (this.dragging) {
             this.onDragEnd(e);
-            this.stopAnimation();
         }
 
         this.setDragging(true);
@@ -514,10 +554,6 @@ Ext.util.Draggable = Ext.extend(Ext.util.Observable, {
         this.startTouchPoint = Ext.util.Point.fromEvent(e);
         this.startOffset = this.offset.copy();
 
-        // Quickly check whether the element size has changed. If yes, updateBoundary again
-        if (this.el.dom.scrollWidth != this.size.width || this.el.dom.scrollHeight != this.size.height) {
-            this.updateBoundary();
-        }
 
         this.fireEvent('dragstart', this, e);
 
@@ -525,8 +561,8 @@ Ext.util.Draggable = Ext.extend(Ext.util.Observable, {
     },
 
     /**
-     * Tets the new offset from a touch point.
-     * @param {Ext.util.Point} touchPoint The touch point instance.
+     * Gets the new offset from a touch offset.
+     * @param {Ext.util.Offset} touchPoint The touch offset instance.
      * @private
      */
     getNewOffsetFromTouchPoint: function(touchPoint) {
@@ -553,7 +589,7 @@ Ext.util.Draggable = Ext.extend(Ext.util.Observable, {
      * @private
      */
     onDrag: function(e) {
-        if (!this.dragging || (e.targetTouches && e.targetTouches.length != 1)) {
+        if (!this.dragging) {
             return;
         }
 
@@ -565,9 +601,11 @@ Ext.util.Draggable = Ext.extend(Ext.util.Observable, {
         }
 
         this.setOffset(newOffset);
-        
+
         this.fireEvent('drag', this, e);
 
+        // This 'return true' here is to let sub-classes determine whether
+        // there's an interuption return before that
         return true;
     },
 
@@ -586,8 +624,11 @@ Ext.util.Draggable = Ext.extend(Ext.util.Observable, {
                 this.setDragging(false);
             }
 
-            this.fireEvent('dragend', this, e);            
+            this.fireEvent('dragend', this, e);
         }
+
+        // This 'return true' here is to let sub-classes determine whether
+        // there's an interuption return before that
         return true;
     },
 
@@ -632,9 +673,8 @@ Ext.util.Draggable = Ext.extend(Ext.util.Observable, {
      * Destroys this Draggable instance.
      */
     destroy: function() {
-        Ext.EventManager.orientationEvent.removeListener(this.onOrientationChange, this);
-        
         this.el.removeCls(this.baseCls);
+        this.getProxyEl().removeCls(this.proxyCls);
         this.clearListeners();
         this.disable();
     },
@@ -668,23 +708,23 @@ Ext.util.Draggable = Ext.extend(Ext.util.Observable, {
 
     /**
      * Method to determine whether this Draggable is currently dragging.
-     * @return {Boolean} the disabled state of this Draggable.
+     * @return {Boolean}
      */
-    isDragging : function() {
+    isDragging: function() {
         return this.dragging;
-    },    
-    
+    },
+
     /**
-     * Method to determine whether this Sortable is currently disabled.
-     * @return {Boolean} the disabled state of this Sortable.
+     * Method to determine whether this Draggable can be dragged on the y-axis
+     * @return {Boolean}
      */
     isVertical : function() {
         return this.vertical;
     },
-    
+
     /**
-     * Method to determine whether this Sortable is currently sorting.
-     * @return {Boolean} the sorting state of this Sortable.
+     * Method to determine whether this Draggable can be dragged on the x-axis
+     * @return {Boolean}
      */
     isHorizontal : function() {
         return this.horizontal;
@@ -696,7 +736,7 @@ Ext.util.Draggable.Animation = {};
 /**
  * @class Ext.util.Draggable.Animation.Abstract
  * @extends Object
- * 
+ *
  * Provides the abstract methods for a Draggable animation.
  * @private
  * @ignore
@@ -707,9 +747,9 @@ Ext.util.Draggable.Animation.Abstract = Ext.extend(Object, {
      * @private
      */
     startTime: null,
-    
+
     /**
-     * @cfg {Object/Ext.util.Point} startOffset Object containing the x and y coordinates the
+     * @cfg {Object/Ext.util.Offset} startOffset Object containing the x and y coordinates the
      * Draggable had when the Animation started.
      * @private
      */
@@ -726,7 +766,7 @@ Ext.util.Draggable.Animation.Abstract = Ext.extend(Object, {
         this.set(config);
 
         if (!this.startTime)
-            this.startTime = (new Date()).getTime();
+            this.startTime = Date.now();
     },
 
     /**
@@ -747,7 +787,7 @@ Ext.util.Draggable.Animation.Abstract = Ext.extend(Object, {
 
     /**
      * This method will return the offset of the coordinate that is being animated for any
-     * given point in time based on a different set of variables. Usually these variables are
+     * given offset in time based on a different set of variables. Usually these variables are
      * a combination of the startOffset, endOffset, startTime and duration.
      * @return {Number} The offset for the coordinate that is being animated
      */
@@ -757,7 +797,7 @@ Ext.util.Draggable.Animation.Abstract = Ext.extend(Object, {
 /**
  * @class Ext.util.Draggable.Animation.Linear
  * @extends Ext.util.Draggable.Animation.Abstract
- * 
+ *
  * A linear animation that is being used by Draggable's setOffset by default.
  * @private
  * @ignore
@@ -767,19 +807,19 @@ Ext.util.Draggable.Animation.Linear = Ext.extend(Ext.util.Draggable.Animation.Ab
      * @cfg {Number} duration The duration of this animation in milliseconds.
      */
     duration: 0,
-    
+
     /**
-     * @cfg {Object/Ext.util.Point} endOffset Object containing the x and y coordinates the
+     * @cfg {Object/Ext.util.Offset} endOffset Object containing the x and y coordinates the
      * Draggable is animating to.
      * @private
      */
     endOffset: 0,
-    
+
     getOffset : function() {
         var distance = this.endOffset - this.startOffset,
-            deltaTime = (new Date()).getTime() - this.startTime,
+            deltaTime = Date.now() - this.startTime,
             omegaTime = Math.min(1, (deltaTime / this.duration));
-        
+
         return this.startOffset + (omegaTime * distance);
     }
 });

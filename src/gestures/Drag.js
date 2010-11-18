@@ -29,27 +29,21 @@ Ext.gesture.Drag = Ext.extend(Ext.gesture.Touch, {
         this.startX = this.previousX = touch.pageX;
         this.startY = this.previousY = touch.pageY;
         this.startTime = this.previousTime = e.timeStamp;
-        
-        if (!this.dragThreshold) {
-            var info = this.getInfo(touch);
-            if (this.fire('dragstart', e, info)) {
-                this.dragging = true;
-                this.lock('drag', 'dragstart', 'dragend');
-                this.fire('drag', e, info);                
-            }
-        }
-        else {
-            this.dragging = false;
-        }
+ 
+        this.dragging = false;
     },    
     
     onTouchMove: function(e, touch) {
+        if (this.isLocked('drag')) {
+            return;
+        }
+        
         var info = this.getInfo(touch);
+        
         if (!this.dragging) {
             if (this.isDragging(info) && this.fire('dragstart', e, info)) {
                 this.dragging = true;
                 this.lock('drag', 'dragstart', 'dragend');
-                this.fire('drag', e, info);
             }
         }
         else {
@@ -61,6 +55,7 @@ Ext.gesture.Drag = Ext.extend(Ext.gesture.Touch, {
         if (this.dragging) {
             this.fire('dragend', e, this.lastInfo);
         }
+        
         this.dragging = false;
     },
     

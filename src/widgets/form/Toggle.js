@@ -7,8 +7,11 @@
  */
 Ext.form.Toggle = Ext.extend(Ext.form.Slider, {
     minValue: 0,
+
     maxValue: 1,
+
     ui: 'toggle',
+    
     inputType: 'toggle',
 
     /**
@@ -25,32 +28,32 @@ Ext.form.Toggle = Ext.extend(Ext.form.Slider, {
      */
     maxValueCls: 'x-toggle-on',
 
+    // Inherited
+    animationDuration: 70,
+    
     /**
      * Toggles between the minValue (0 by default) and the maxValue (1 by default)
      */
     toggle: function() {
-        var me = this,
-            thumb = me.thumbs[0],
+        var thumb = this.thumbs[0],
             value = thumb.getValue();
 
-        me.setValue(value == me.minValue ? me.maxValue : me.minValue, true);
+        this.setValue(value == this.minValue ? this.maxValue : this.minValue, this.animationDuration);
     },
 
     // inherit docs
     setValue: function(value) {
-        var me = this;
-        
-        Ext.form.Toggle.superclass.setValue.apply(me, arguments);
+        Ext.form.Toggle.superclass.setValue.call(this, value, this.animationDuration);
 
-        var fieldEl = me.fieldEl;
+        var fieldEl = this.fieldEl;
         
-        if (me.constrain(value) === me.minValue) {
-            fieldEl.addCls(me.minValueCls);
-            fieldEl.removeCls(me.maxValueCls);
+        if (this.constrain(value) === this.minValue) {
+            fieldEl.addCls(this.minValueCls);
+            fieldEl.removeCls(this.maxValueCls);
         }
         else {
-            fieldEl.addCls(me.maxValueCls);
-            fieldEl.removeCls(me.minValueCls);
+            fieldEl.addCls(this.maxValueCls);
+            fieldEl.removeCls(this.minValueCls);
         }
     },
 
@@ -71,10 +74,10 @@ Ext.form.Toggle = Ext.extend(Ext.form.Slider, {
 
 Ext.reg('togglefield', Ext.form.Toggle);
 
-
+//<deprecated since=0.99>
 //DEPRECATED - remove this in 1.0. See RC1 Release Notes for details
 Ext.reg('toggle', Ext.form.Toggle);
-
+//</deprecated>
 
 /**
  * @class Ext.form.Toggle.Thumb

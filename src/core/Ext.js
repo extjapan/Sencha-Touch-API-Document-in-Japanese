@@ -6,11 +6,11 @@ Ext.apply(Ext, {
      * The version of the framework
      * @type String
      */
-    version : '1.0.0RC',
+    version : '1.0.0',
     versionDetail : {
         major : 1,
         minor : 0,
-        patch : '0RC'
+        patch : 0
     },
     
     /**
@@ -117,7 +117,7 @@ function(el){
         var head = Ext.get(document.getElementsByTagName('head')[0]),
             tag, precomposed;
 
-        /**
+        /*
          * The viewport meta tag. This disables user scaling. This is supported
          * on most Android phones and all iOS devices and will probably be supported
          * on most future devices (like Blackberry, Palm etc).
@@ -131,12 +131,12 @@ function(el){
             head.appendChild(tag);                    
         }
         
-        /**
+        /*
          * We want to check now for iOS specific meta tags. Unfortunately most
          * of these are not supported on devices other then iOS.
          */
         if (Ext.is.iOS) {
-            /**
+            /*
              * On iOS, if you save to home screen, you can decide if you want
              * to launch the app fullscreen (without address bar). You can also
              * change the styling of the status bar at the top of the screen.
@@ -159,7 +159,7 @@ function(el){
                 }
             }
             
-            /**
+            /*
              * iOS allows you to specify a startup screen. This is displayed during
              * the startup of your app if you save to your homescreen. Since we could
              * be dealing with an iPad or iPhone/iPod, we have a tablet startup screen
@@ -183,7 +183,7 @@ function(el){
                 head.appendChild(tag);
             }
             
-            /**
+            /*
              * On iOS you can specify the icon used when you save the app to your
              * homescreen. You can set an icon that will be used for both iPads
              * and iPhone/iPod, or you can specify specific icons for both.
@@ -252,7 +252,6 @@ Ext.Viewport = new (Ext.extend(Ext.util.Observable, {
             me.scrollToTop();
 
             setTimeout(function() {
-//                me.updateSize();
 
                 Ext.getBody().setStyle('overflow', 'hidden');
 
@@ -313,35 +312,24 @@ Ext.Viewport = new (Ext.extend(Ext.util.Observable, {
         }
 
         if (Ext.is.Android) {
+            if (target.nodeType == 3) {
+                target = target.parentNode;
+            }
+            
             if (target.tagName && (/input|select|textarea/i.test(target.tagName))) {
                 return;
             }
-            
+
             e.preventDefault();
             e.stopPropagation();
         }
     },
 
+
     onTouchMoveBubbling: function(e) {
         e.preventDefault();
         e.stopPropagation();
     },
-
-
-//    updateSize: function() {
-//        var size = this.getSize();
-//
-//        if (!this.lastSize) {
-//            this.lastSize = size;
-//            return;
-//        }
-//
-//        if (size.width != this.lastSize.width || size.height != this.lastSize.height) {
-//            this.fireResizeEvent();
-//        }
-//
-//        this.lastSize = size;
-//    },
 
     onOrientationChange: function() {
         var me = this;

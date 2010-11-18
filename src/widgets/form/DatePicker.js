@@ -30,10 +30,8 @@ Ext.form.DatePicker = Ext.extend(Ext.form.Field, {
     destroyPickerOnHide: false,
 
     // @cfg {Number} tabIndex @hide
-    tabIndex: -1,
 
     // @cfg {Boolean} useMask @hide
-    useMask: true,
     
     // @private
     initComponent: function() {
@@ -46,6 +44,9 @@ Ext.form.DatePicker = Ext.extend(Ext.form.Field, {
              */
             'select'
         );
+
+        this.tabIndex = -1;
+        this.useMask = true;
 
         Ext.form.Text.superclass.initComponent.apply(this, arguments);
     },
@@ -76,11 +77,11 @@ Ext.form.DatePicker = Ext.extend(Ext.form.Field, {
 
     /**
      * @private
-     * Listener to the tap event on the internal {@link #button}. Shows the internal {@link #datePicker} component when the button has been tapped.
+     * Listener to the tap event of the mask element. Shows the internal {@link #datePicker} component when the button has been tapped.
      */
     onMaskTap: function() {
-        if (this.disabled) {
-            return;
+        if (Ext.form.DatePicker.superclass.onMaskTap.apply(this, arguments) !== true) {
+            return false;
         }
         
         this.getDatePicker().show();
@@ -110,11 +111,20 @@ Ext.form.DatePicker = Ext.extend(Ext.form.Field, {
 
     // inherit docs
     setValue: function(value, animated) {
-        var datePicker = this.getDatePicker();
+        if (this.datePicker) {
+            this.datePicker.setValue(value, animated);
+            this.value = (value != null) ? this.datePicker.getValue() : null;
+        } else {
+            if (!Ext.isDate(value) && !Ext.isObject(value)) {
+                value = null;
+            }
 
-        datePicker.setValue(value, animated);
-
-        this.value = datePicker.getValue();
+            if (Ext.isObject(value)) {
+                this.value = new Date(value.year, value.month-1, value.day);
+            } else {
+                this.value = value;
+            }
+        }
 
         if (this.rendered) {
             this.fieldEl.dom.value = this.getValue(true);
@@ -144,6 +154,7 @@ Ext.form.DatePicker = Ext.extend(Ext.form.Field, {
 
 Ext.reg('datepickerfield', Ext.form.DatePicker);
 
+//<deprecated since=0.99>
 /**
  * @class Ext.form.DatePickerField
  * @extends Ext.form.DatePicker
@@ -158,3 +169,4 @@ Ext.form.DatePickerField = Ext.extend(Ext.form.DatePicker, {
         Ext.form.DatePickerField.superclass.constructor.apply(this, arguments);
     }
 });
+//</deprecated>

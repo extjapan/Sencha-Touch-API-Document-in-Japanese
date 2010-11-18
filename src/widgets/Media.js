@@ -5,7 +5,7 @@
  * <p>Provides a base class for audio/visual controls. Should not be used directly.</p>
  * @xtype media
  */
-Ext.Media = Ext.extend(Ext.Container, {
+Ext.Media = Ext.extend(Ext.Component, {
     /**
      * @constructor
      * @param {Object} config

@@ -31,7 +31,7 @@ Ext.gesture.Touch = Ext.extend(Ext.gesture.Gesture, {
     },
     
     getInfo : function(touch) {
-        var time = (new Date()).getTime(),
+        var time = Date.now(),
             deltaX = touch.pageX - this.startX,
             deltaY = touch.pageY - this.startY,
             info = {

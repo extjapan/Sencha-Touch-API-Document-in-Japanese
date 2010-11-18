@@ -80,6 +80,14 @@ Ext.form.FormPanel = Ext.extend(Ext.Panel, {
     waitTpl: new Ext.XTemplate(
         '<div class="{cls}">{message}&hellip;</div>'
     ),
+    
+    /**
+     * @cfg {Object} submitOnAction
+     * When this is set to true, the form will automatically submit itself whenever the 'action'
+     * event fires on a field in this form. The action event usually fires whenever you press
+     * go or enter inside a textfield.
+     */
+    submitOnAction : true,    
 
     getElConfig: function() {
         return Ext.apply(Ext.form.FormPanel.superclass.getElConfig.call(this), {
@@ -120,6 +128,8 @@ Ext.form.FormPanel = Ext.extend(Ext.Panel, {
         );
 
         Ext.form.FormPanel.superclass.initComponent.call(this);
+        
+        this.on('action', this.onFieldAction, this);
     },
     
     // @private
@@ -134,6 +144,14 @@ Ext.form.FormPanel = Ext.extend(Ext.Panel, {
             if (e) {
                 e.stopEvent();
             }       
+        }
+    },
+    
+    // @private
+    onFieldAction : function(field) {
+        if (this.submitOnAction) {
+            field.blur();
+            this.submit();
         }
     },
     
@@ -268,16 +286,16 @@ Ext.form.FormPanel = Ext.extend(Ext.Panel, {
                           response = Ext.decode(response.responseText);
                           success = !!response.success;
                         if (success) {
-                            if (typeof options.success == 'function') {
-                                options.scope ? options.success.call(options.scope, this, response) : options.success(this, response);
+                            if (Ext.isFunction(options.success)) {
+                                options.success.call(options.scope || this, this, response);
                             }
                             this.fireEvent('submit', this, response);
                             return;
                         }
                     }
 
-                    if (typeof options.failure == 'function') {
-                        options.scope ? options.failure.call(options.scope, this, response) : options.failure(this, response);
+                    if (Ext.isFunction(options.failure)) {
+                        options.failure.call(options.scope || this, this, response);
                     }
                     
                     this.fireEvent('exception', this, response);
@@ -378,24 +396,31 @@ myForm.setValues({
     setValues: function(values) {
          var fields = this.getFields(),
              name,
-             field;
+             field,
+             value;
              
         values = values || {};
         
         for (name in values) {
             if (values.hasOwnProperty(name)) {
-                if (Ext.isArray(fields[name])) {
-                    fields[name].forEach(function(field) {
-                        if (Ext.isArray(values[name])) {
-                            field.setChecked((values[name].indexOf(field.getValue()) != -1));
+                field = fields[name];
+                value = values[name];
+                if (field) {
+                    if (Ext.isArray(field)) {
+                        field.forEach(function(field){
+                            if (Ext.isArray(values[name])) {
+                                field.setChecked((value.indexOf(field.getValue()) != -1));
+                            } else {
+                                field.setChecked((value == field.getValue()));
+                            }
+                        });
+                    } else {  
+                        if (field.setChecked) {
+                            field.setChecked(value);
                         } else {
-                            field.setChecked((values[name] == field.getValue()));
+                            field.setValue(value);
                         }
-                    });
-                } else {
-                    field = fields[name];
-
-                    field.setValue(values[name]);
+                    }
                 }
             }       
         }

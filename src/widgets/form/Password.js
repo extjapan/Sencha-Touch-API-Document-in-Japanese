@@ -1,16 +1,17 @@
 /**
  * @class Ext.form.Password
- * @extends Ext.form.Field
+ * @extends Ext.form.Text
  * <p>Wraps an HTML5 password field. See {@link Ext.form.FormPanel FormPanel} for example usage.</p>
  * @xtype passwordfield
  */
 Ext.form.Password = Ext.extend(Ext.form.Text, {
-    inputType: 'password',
+    inputType: Ext.is.Android ? 'text' : 'password',
     autoCapitalize : false
 });
 
 Ext.reg('passwordfield', Ext.form.Password);
 
+//<deprecated since=0.99>
 /**
  * @class Ext.form.PasswordField
  * @extends Ext.form.Password
@@ -25,3 +26,4 @@ Ext.form.PasswordField = Ext.extend(Ext.form.Password, {
         Ext.form.PasswordField.superclass.constructor.apply(this, arguments);
     }
 });
+//</deprecated>

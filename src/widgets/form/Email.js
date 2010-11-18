@@ -12,6 +12,7 @@ Ext.form.Email = Ext.extend(Ext.form.Text, {
 
 Ext.reg('emailfield', Ext.form.Email);
 
+//<deprecated since=0.99>
 /**
  * @class Ext.form.EmailField
  * @extends Ext.form.Email
@@ -26,3 +27,4 @@ Ext.form.EmailField = Ext.extend(Ext.form.Email, {
         Ext.form.EmailField.superclass.constructor.apply(this, arguments);
     }
 });
+//</deprecated>

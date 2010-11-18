@@ -1,6 +1,6 @@
 /**
  * @class Ext.form.Select
- * @extends Ext.form.Field
+ * @extends Ext.form.Text
  * Simple Select field wrapper. Example usage:
 <pre><code>
 new Ext.form.Select({
@@ -49,6 +49,11 @@ Ext.form.Select = Ext.extend(Ext.form.Text, {
      * This config will be ignore if a {@link #store store} instance is provided
      */
     
+    /**
+     * @cfg {String} hiddenName Specify a hiddenName if you're using the {@link Ext.form.FormPanel#standardSubmit standardSubmit} option.
+     * This name will be used to post the underlying value of the select to the server.
+     */
+    
     // @cfg {Number} tabIndex @hide
     tabIndex: -1,
 
@@ -83,6 +88,19 @@ Ext.form.Select = Ext.extend(Ext.form.Text, {
              */
             'change'
         );
+    },
+    
+    onRender: function(){
+        Ext.form.Select.superclass.onRender.apply(this, arguments);
+        
+        var name = this.hiddenName;
+        if (name) {
+            this.hiddenField = this.el.insertSibling({
+                name: name,
+                tag: 'input',
+                type: 'hidden'
+            }, 'after');
+        }    
     },
 
     getPicker: function() {
@@ -148,7 +166,7 @@ Ext.form.Select = Ext.extend(Ext.form.Text, {
         }
         else {
             var listPanel = this.getListPanel(),
-                index = this.store.find(this.valueField, this.value);
+                index = this.store.findExact(this.valueField, this.value);
 
             listPanel.showBy(this.el, 'fade', false);
             listPanel.down('#list').getSelectionModel().select(index != -1 ? index: 0, false, true);
@@ -180,11 +198,21 @@ Ext.form.Select = Ext.extend(Ext.form.Text, {
 
     // Inherited docs
     setValue: function(value) {
-        var record = value ? this.store.findRecord(this.valueField, value) : this.store.getAt(0);
+        var idx = 0,
+            hiddenField = this.hiddenField,
+            record;
+
+        if (value) {
+            idx = this.store.findExact(this.valueField, value)
+        } 
+        record = this.store.getAt(idx);
 
         if (record && this.rendered) {
             this.fieldEl.dom.value = record.get(this.displayField);
             this.value = record.get(this.valueField);
+            if (hiddenField) {
+                hiddenField.dom.value = this.value;
+            }
         } else {
             this.value = value;
         }
@@ -231,18 +259,13 @@ selectBox.setOptions(
 
     destroy: function() {
         Ext.form.Select.superclass.destroy.apply(this, arguments);
-
-        if (this.listPanel) {
-            this.listPanel.destroy();
-        }
-
-        if (this.picker) {
-            this.picker.destroy();
-        }
+        Ext.destroy(this.listPanel, this.picker, this.hiddenField);
     }
 });
 
 Ext.reg('selectfield', Ext.form.Select);
 
+//<deprecated since=0.99>
 //DEPRECATED - remove this in 1.0. See RC1 Release Notes for details
 Ext.reg('select', Ext.form.Select);
+//</deprecated>

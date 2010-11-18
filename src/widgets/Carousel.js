@@ -148,42 +148,31 @@ Ext.Carousel = Ext.extend(Ext.Panel, {
 
         // Bind the required listeners
         this.mon(this.body, {
-            dragstart: this.onDragStart,
             drag: this.onDrag,
-            dragThreshold: 6,
+            dragThreshold: 5,
             dragend: this.onDragEnd,
             direction: this.direction,
-            disableLocking: true,
             scope: this
         });
         
         this.el.addCls(this.baseCls + '-' + this.direction);
     },
     
-    onDragStart : function(e) {
-        var gesture = e.gesture,
-            type = e.type;
-        
-        // If the gesture is locked, it means that a scroller or other inner element is listening for drag events
-        // and locking the gesture. In this case we want to check if we are at the boundaries of that scroller.
-        // If so, then we perform the carousel's behavior, else let the inner dragging thingy do its thingy.
-        if (gesture.isLocked(type)) {
-            var lockingGesture = gesture.getLockingGesture(type),
-                lockingTarget = lockingGesture.target,
-                scrollEl = Ext.get(lockingTarget).down('.x-scroller'),
-                scroller = scrollEl && scrollEl.getScrollParent();
-            
-            if (scroller && ((scroller.vertical && this.vertical) || (scroller.horizontal && this.vertical))) {
-                this.inScrollBounds = false;
-                this.checkScrollBounds = scroller;
-            }
-            else {
-                e.gesture.stop();
-            }
-        }
-        else {
-            e.gesture.disableLocking = false;
-            e.gesture.lock();
+    // private, inherit docs
+    onAdd: function(){
+        Ext.Carousel.superclass.onAdd.apply(this, arguments);
+        var indicator = this.indicator;
+        if (indicator) {
+            indicator.onCardAdd();
+        }    
+    },
+    
+    // private, inherit docs
+    onRemove: function(){
+        Ext.Carousel.superclass.onRemove.apply(this, arguments);
+        var indicator = this.indicator;
+        if (indicator) {
+            indicator.onCardRemove();
         }
     },
     
@@ -217,35 +206,6 @@ Ext.Carousel = Ext.extend(Ext.Panel, {
             x: e.deltaX,
             y: e.deltaY
         };
-
-        var scroller = this.checkScrollBounds;
-        if (scroller) {
-            var offset = scroller.getNewOffsetFromTouchPoint(Ext.util.Point.fromEvent(e));
-            if (
-                (this.vertical && !scroller.offsetBoundary.isOutOfBound('y', offset.y)) ||
-                (this.horizontal && !scroller.offsetBoundary.isOutOfBound('x', offset.x))
-            ) {
-                if (this.outOfScrollBounds) {
-                    this.outOfScrollBounds = false;
-                    this.checkDragEnd = false;
-                    scroller.onStart(e);
-                }
-                return;
-            }
-            else {
-                if (!this.outOfScrollBounds) {
-                    this.checkDragEnd = true;
-                    this.outOfScrollBounds = true;
-                    scroller.scrollView.hideIndicators();
-                    Ext.apply(e.gesture, {
-                        startX: e.pageX,
-                        startY: e.pageY,
-                        startTime: e.time 
-                    });
-                    return;
-                }
-            }
-        }
         
         // Slow the drag down in the bounce
         var activeIndex = this.items.items.indexOf(this.layout.activeItem);
@@ -257,17 +217,8 @@ Ext.Carousel = Ext.extend(Ext.Panel, {
                 // Or on the last card and dragging right
                 (activeIndex == this.items.length - 1 && e.deltaX < 0)
             ) {
-                if (scroller) {
-                    // If there is a scroller, then we let the scroller handle the bounce
-                    return;
-                }
-                else {
-                    // Then slow the drag down
-                    this.currentScroll.x = e.deltaX / 2;                
-                }                
-            }
-            else if (scroller) {
-                scroller.isDragging = false;
+                // Then slow the drag down
+                this.currentScroll.x = e.deltaX / 2;             
             }
         }
         // If this is a vertical carousel
@@ -278,17 +229,8 @@ Ext.Carousel = Ext.extend(Ext.Panel, {
                 // Or on the last card and dragging down
                 (activeIndex == this.items.length - 1 && e.deltaY < 0)
             ) {
-                if (scroller) {
-                    // If there is a scroller, then we let the scroller handle the bounce
-                    return;
-                }
-                else {
-                    // Then slow the drag down
-                    this.currentScroll.y = e.deltaY / 2;                
-                }
-            }
-            else if (scroller) {
-                scroller.isDragging = false;
+                // Then slow the drag down
+                this.currentScroll.y = e.deltaY / 2;
             }
         }
         // This will update all the cards to their correct position based on the current drag
@@ -389,11 +331,6 @@ Ext.Carousel = Ext.extend(Ext.Panel, {
      * @private
      */        
     onDragEnd : function(e, t) {
-        e.gesture.disableLocking = true;
-        if (this.checkScrollBounds && !this.outOfScrollBounds) {
-            return;
-        }
-        
         var previousDelta, deltaOffset; 
             
         if (this.horizontal) {
@@ -517,6 +454,12 @@ Ext.Carousel = Ext.extend(Ext.Panel, {
      */
     isHorizontal : function() {
         return this.horizontal;
+    },
+    
+    // private, inherit docs
+    beforeDestroy: function(){
+        Ext.destroy(this.indicator);
+        Ext.Carousel.superclass.beforeDestroy.call(this);
     }
 });
 
@@ -556,8 +499,6 @@ Ext.Carousel.Indicator = Ext.extend(Ext.Component, {
 
         this.mon(this.carousel, {
             beforecardswitch: this.onBeforeCardSwitch,
-            add: this.onCardAdd,
-            remove: this.onCardRemove,
             scope: this
         });
 
@@ -573,15 +514,12 @@ Ext.Carousel.Indicator = Ext.extend(Ext.Component, {
     onTap: function(e, t) {
         var box = this.el.getPageBox(),
             centerX = box.left + (box.width / 2),
-            centerY = box.top + (box.height / 2);
+            centerY = box.top + (box.height / 2),
+            carousel = this.carousel;
 
-        if (
-            (this.carousel.direction == 'horizontal' && e.pageX > centerX) || 
-            (this.carousel.direction == 'vertical' && e.pageY > centerY)
-        ) {
+        if ((carousel.isHorizontal() && e.pageX > centerX) || (carousel.isVertical() && e.pageY > centerY)) {
             this.carousel.next();
-        }
-        else {
+        } else {
             this.carousel.prev();
         }
     },
@@ -603,12 +541,16 @@ Ext.Carousel.Indicator = Ext.extend(Ext.Component, {
 
     // @private
     onCardAdd: function() {
-        this.createIndicator();
+        if (this.rendered) {
+            this.createIndicator();
+        }
     },
 
     // @private
     onCardRemove: function() {
-        this.indicators.pop().remove();
+        if (this.rendered) {
+            this.indicators.pop().remove();
+        }
     }
 });
 

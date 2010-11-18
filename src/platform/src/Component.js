@@ -1391,7 +1391,7 @@ alert(t.getXTypes());  // alerts 'component/field/textfield'
                 this.loadMask.show();
             }
             else {
-                this.loadMask.destroy();
+								Ext.destroy(this.loadMask);
                 this.loadMask = null;
             }
         }
@@ -1418,7 +1418,7 @@ alert(t.getXTypes());  // alerts 'component/field/textfield'
         if (this.monitorResize && Ext.EventManager.resizeEvent) {
             Ext.EventManager.resizeEvent.removeListener(this.setSize, this);
         }
-        Ext.destroy(this.componentLayout);
+        Ext.destroy(this.componentLayout, this.loadMask);
     },
 
     /**

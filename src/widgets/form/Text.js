@@ -41,6 +41,10 @@ Ext.form.Text = Ext.extend(Ext.form.Field, {
     autoCorrect: undefined,
 
     /**
+     * @cfg {Integer} maxLength Maximum number of character permit by the input.
+     */
+
+    /**
      * @property {Boolean} <tt>True</tt> if the field currently has focus.
      */
     isFocused: false,
@@ -80,8 +84,19 @@ Ext.form.Text = Ext.extend(Ext.form.Field, {
              * @param {Mixed} newValue The new value
              * @param {Mixed} oldValue The original value
              */
-            'change'
+            'change',
+            /**
+             * @event action
+             * Fires whenever the return key or go is pressed. FormPanel listeners
+             * for this event, and submits itself whenever it fires. Also note
+             * that this event bubbles up to parent containers.
+             * @param {Ext.form.Text} this This field
+             * @param {Mixed} e The key event object
+             */
+            'action'
         );
+        
+        this.enableBubble('action');
 
         Ext.form.Text.superclass.initComponent.apply(this, arguments);
     },
@@ -139,10 +154,10 @@ Ext.form.Text = Ext.extend(Ext.form.Field, {
                 scope: this
             });
 
-            if(this.clearIconEl){
+            if (this.clearIconEl){
                 this.mon(this.clearIconContainerEl, {
                     scope: this,
-                    tap: this.onClearTap
+                    tap: this.onClearIconTap
                 });
             }
         }
@@ -166,12 +181,14 @@ Ext.form.Text = Ext.extend(Ext.form.Field, {
         this.hideClearIcon();
     },
 
-    onClearTap: function() {
+    // @private
+    onClearIconTap: function() {
         if (!this.disabled) {
             this.setValue('');
         }
     },
 
+    // @private
     updateClearIconVisibility: function() {
         var value = this.getValue();
 
@@ -189,6 +206,7 @@ Ext.form.Text = Ext.extend(Ext.form.Field, {
         return this;
     },
 
+    // @private
     showClearIcon: function() {
         if (!this.disabled && this.fieldEl && this.clearIconEl && !this.isClearIconVisible) {
             this.isClearIconVisible = true;
@@ -199,6 +217,7 @@ Ext.form.Text = Ext.extend(Ext.form.Field, {
         return this;
     },
 
+    // @private
     hideClearIcon: function() {
         if (this.fieldEl && this.clearIconEl && this.isClearIconVisible) {
             this.isClearIconVisible = false;
@@ -219,7 +238,18 @@ Ext.form.Text = Ext.extend(Ext.form.Field, {
         this.fireEvent('beforefocus', e);
     },
 
+    // @private
     beforeFocus: Ext.emptyFn,
+
+    // @private
+    onMaskTap: function(e) {
+        if (Ext.form.Text.superclass.onMaskTap.apply(this, arguments) !== true) {
+            return false;
+        }
+        
+        this.maskCorrectionTimer = Ext.defer(this.showMask, 1000, this);
+        this.hideMask();
+    },
 
     // @private
     onFocus: function(e) {
@@ -227,7 +257,7 @@ Ext.form.Text = Ext.extend(Ext.form.Field, {
             if (this.maskCorrectionTimer) {
                 clearTimeout(this.maskCorrectionTimer);
             }
-
+            
             this.hideMask();
         }
 
@@ -306,25 +336,24 @@ Ext.form.Text = Ext.extend(Ext.form.Field, {
         return this;
     },
 
+    // Inherited docs
     setValue: function() {
         Ext.form.Text.superclass.setValue.apply(this, arguments);
 
         this.updateClearIconVisibility();
     },
 
+    // @private
     onKeyUp: function(e) {
         this.updateClearIconVisibility();
         
+        this.fireEvent('keyup', this, e);
+
         if (e.browserEvent.keyCode === 13) {
             this.blur();
-        } else {
-            this.fireEvent('keyup', this, e);
+            this.fireEvent('action', this, e);
         }
     }
-
-    /**
-     * @cfg {Integer} maxLength Maximum number of character permit by the input. 
-     */
 });
 
 Ext.reg('textfield', Ext.form.Text);
@@ -337,7 +366,6 @@ Ext.reg('textfield', Ext.form.Text);
  * DEPRECATED - remove this in 1.0. See RC1 Release Notes for details
  */
 Ext.form.TextField = Ext.extend(Ext.form.Text, {
-
     constructor: function() {
         console.warn("Ext.form.TextField has been deprecated and will be removed in Sencha Touch 1.0. Please use Ext.form.Text instead");
         Ext.form.TextField.superclass.constructor.apply(this, arguments);

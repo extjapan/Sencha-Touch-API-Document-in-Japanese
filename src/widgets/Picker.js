@@ -268,7 +268,7 @@ Ext.Picker = Ext.extend(Ext.Sheet, {
         // Value is an object with keys mapping to slot names
         if (!values) {
             for (var i = 0; i < ln; i++) {
-                items[i].setValue(0);
+                items[i].setSelectedNode(0);
             }
             
             return this;
@@ -416,7 +416,8 @@ Ext.Picker.Slot = Ext.extend(Ext.DataView, {
             friction: 0.7,
             acceleration: 25,
             snapDuration: 150,
-            animationDuration: 150
+            animationDuration: 150,
+            eventTarget: 'parent'
         };
 
         this.tpl = new Ext.XTemplate([
@@ -452,6 +453,7 @@ Ext.Picker.Slot = Ext.extend(Ext.DataView, {
                 model: 'x-textvalue',
                 data: parsedData
             });
+            
             this.tempStore = true;
         }
         else if (this.store) {

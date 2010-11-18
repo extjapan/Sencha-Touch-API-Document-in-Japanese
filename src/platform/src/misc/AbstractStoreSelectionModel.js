@@ -21,6 +21,12 @@ Ext.AbstractStoreSelectionModel = Ext.extend(Ext.util.Observable, {
      * Modes of selection.
      * Valid values are SINGLE, SIMPLE, and MULTI. Defaults to 'SINGLE'
      */
+    
+    /**
+     * @cfg {Boolean} allowDeselect
+     * Allow users to deselect a record in a DataView, List or Grid. Only applicable when the SelectionModel's mode is 'SINGLE'. Defaults to false.
+     */
+    allowDeselect: false,
 
     /**
      * @property selected
@@ -116,7 +122,13 @@ Ext.AbstractStoreSelectionModel = Ext.extend(Ext.util.Observable, {
                 }
                 break;
             case 'SINGLE':
-                this.doSelect(record, false);
+                // if allowDeselect is on and this record isSelected, deselect it
+                if (this.allowDeselect && this.isSelected(record)) {
+                    this.doDeselect(record);
+                // select the record and do NOT maintain existing selections
+                } else {
+                    this.doSelect(record, false);
+                }
                 break;
         }
     },

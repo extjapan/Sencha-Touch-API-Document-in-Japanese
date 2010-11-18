@@ -30,5 +30,7 @@ Ext.form.HiddenField = Ext.extend(Ext.form.Hidden, {
     }
 });
 
+//<deprecated since=0.99>
 //DEPRECATED - remove this in 1.0. See RC1 Release Notes for details
 Ext.reg('hidden', Ext.form.Hidden);
+//</deprecated>

@@ -180,7 +180,9 @@ Ext.DataView = Ext.extend(Ext.Component, {
     onRender : function() {
         Ext.DataView.superclass.onRender.apply(this, arguments);
         if (this.loadingText) {
-            this.loadMask = new Ext.LoadMask(this.el);
+            this.loadMask = new Ext.LoadMask(this.el, {
+                msg: this.loadingText
+            });
         }
     },
 

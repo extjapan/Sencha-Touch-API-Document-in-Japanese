@@ -6,14 +6,31 @@ Ext.ScrollManager = new Ext.AbstractManager();
  * @class Ext.util.ScrollView
  * @extends Ext.util.Observable
  *
- * A wrapper class that listens to scroll events and control the scroll indicators
+ * A wrapper class around {@link Ext.util.Scroller Ext.util.Scroller} and {@link Ext.util.Scroller.Indicator Ext.util.Scroller.Indicator}
+ * that listens to scroll events and control the scroll indicators
  */
 Ext.util.ScrollView = Ext.extend(Ext.util.Observable, {
 
+    /**
+     * @cfg {Boolean/String} useIndicators
+     * Whether or not to use indicators. Can be either: <ul>
+     * <li>{Boolean} true to display both directions, false otherwise</li>
+     * <li>{String} 'vertical' or 'horizontal' to display for that specific direction only</li>
+     * Defaults to true
+     */
     useIndicators: true,
 
+    /**
+     * @cfg {Object} indicatorConfig
+     * A valid config object for {@link Ext.util.Scroller.Indicator Ext.util.Scroller.Indicator}
+     */
     indicatorConfig: {},
-    
+
+    /**
+     * @cfg {Number} indicatorMargin
+     * The margin value for the indicator relatively to the container.
+     * Defaults to <tt>4</tt>
+     */
     indicatorMargin: 4,
 
     constructor: function(el, config) {
@@ -56,26 +73,17 @@ Ext.util.ScrollView = Ext.extend(Ext.util.Observable, {
         });
     },
 
+    // @private
     onScrollStart: function() {
         this.showIndicators();
     },
 
+    // @private
     onScrollEnd: function() {
         this.hideIndicators();
     },
-    
-    showIndicators : function() {
-        Ext.iterate(this.indicators, function(axis, indicator) {
-            indicator.show();
-        }, this);        
-    },
-    
-    hideIndicators : function() {
-        Ext.iterate(this.indicators, function(axis, indicator) {
-            indicator.hide();
-        }, this);        
-    },
 
+    // @private
     onScroll: function(scroller) {
         if (scroller.offsetBoundary == null || (!this.indicators.vertical && !this.indicators.horizontal))
             return;
@@ -119,7 +127,6 @@ Ext.util.ScrollView = Ext.extend(Ext.util.Observable, {
                                               * (this.containerSize[sizeAxis] - this.indicatorSizes[axis]));
             } else if (offset[offsetAxis] < boundary[offsetMark]) {
                 this.indicatorOffsets[axis] = this.containerSize[sizeAxis] - this.indicatorSizes[axis];
-//                this.indicatorOffsets[axis] = Math.round(this.indicatorOffsets[axis]);
             } else {
                 this.indicatorOffsets[axis] = 0;
             }
@@ -127,6 +134,41 @@ Ext.util.ScrollView = Ext.extend(Ext.util.Observable, {
             indicator.setOffset(this.indicatorOffsets[axis] + this.indicatorMargin);
             indicator.setSize(this.indicatorSizes[axis] - (this.indicatorMargin * 2));
         }, this);
+    },
+
+    /*
+     * Show the indicators if they are enabled; called automatically when the Scroller starts moving
+     * @return {Ext.util.ScrollView} this This ScrollView
+     */
+    showIndicators : function() {
+        Ext.iterate(this.indicators, function(axis, indicator) {
+            indicator.show();
+        }, this);
+
+        return this;
+    },
+
+     /*
+     * Hide the indicators if they are enabled; called automatically when the scrolling ends
+     * @return {Ext.util.ScrollView} this This ScrollView
+     */
+    hideIndicators : function() {
+        Ext.iterate(this.indicators, function(axis, indicator) {
+            indicator.hide();
+        }, this);
+    },
+
+    // Inherited docs
+    destroy: function() {
+        this.scroller.destroy();
+
+        if (this.indicators) {
+            Ext.iterate(this.indicators, function(axis, indicator) {
+                indicator.destroy();
+            }, this);
+        }
+
+        return Ext.util.ScrollView.superclass.destroy.apply(this, arguments);
     }
 });
 
@@ -134,7 +176,7 @@ Ext.util.ScrollView = Ext.extend(Ext.util.Observable, {
  * @class Ext.util.Scroller
  * @extends Ext.util.Draggable
  *
- * Mimic the native scrolling experience on iDevices
+ * Provide the native scrolling experience on iDevices for any DOM element
  */
 Ext.util.Scroller = Ext.extend(Ext.util.Draggable, {
     // Inherited
@@ -164,9 +206,9 @@ Ext.util.Scroller = Ext.extend(Ext.util.Draggable, {
     
     /**
      * @cfg {Number} fps
-     * The desired fps of the deceleration. Defaults to 100.
+     * The desired fps of the deceleration. Defaults to 80.
      */
-    fps: 100,
+    fps: 80,
 
     /**
      * @cfg {Number} friction
@@ -280,7 +322,7 @@ Ext.util.Scroller = Ext.extend(Ext.util.Draggable, {
         }
 
         this.frameDuration = 1000 / this.fps;
-        this.omega = 1 - (this.friction / 10);
+        this.theta = Math.log(1 - (this.friction / 10));
 
 //        this.updateBoundary();
 
@@ -296,7 +338,7 @@ Ext.util.Scroller = Ext.extend(Ext.util.Draggable, {
             if (!this.decelerationAnimation[a]) {
                 this.decelerationAnimation[a] = new Ext.util.Scroller.Animation.Deceleration({
                     acceleration: this.acceleration,
-                    omega: this.omega
+                    theta: this.theta
                 });
             }
 
@@ -311,35 +353,39 @@ Ext.util.Scroller = Ext.extend(Ext.util.Draggable, {
         return this;
     },
 
-    setEnabled: function(enabled) {
-        Ext.util.Scroller.superclass.setEnabled.apply(this, arguments);
-
-        this.eventTarget[enabled ? 'on' : 'un']('touchstart', this.onTouchStart, this);
-    },
-
-
+    // Inherited docs
     updateBoundary: function() {
         Ext.util.Scroller.superclass.updateBoundary.apply(this, arguments);
         
         this.snapToBoundary();
+
+        return this;
     },
-    
+
+    // Inherited docs
     setOffset: function(p) {
-        p.round();
+//        p.round();
         
         Ext.util.Scroller.superclass.setOffset.apply(this, arguments);
 
         this.fireEvent('scroll', this, this.getOffset());
+
+        return this;
     },
 
+    // @private
     onTouchStart: function(e) {
+        Ext.util.Scroller.superclass.onTouchStart.apply(this, arguments);
+        
         this.stopMomentumAnimation();
     },
 
+    // @private
     onDragStart: function(e) {
         this.fireEvent('scrollstart', this, e);
     },
 
+    // @private
     onStart: function(e) {
         if (Ext.util.Scroller.superclass.onStart.apply(this, arguments) !== true)
             return;
@@ -347,8 +393,13 @@ Ext.util.Scroller = Ext.extend(Ext.util.Draggable, {
         this.startTime = e.event.timeStamp;
         this.lastEventTime = e.event.timeStamp;
         this.startTimeOffset = this.offset.copy();
+
+        //<debug>
+        this.framesHandled = 0;
+        //</debug>
     },
 
+    // @private
     onDrag: function(e) {
         if (Ext.util.Scroller.superclass.onDrag.apply(this, arguments) !== true)
             return;
@@ -361,6 +412,7 @@ Ext.util.Scroller = Ext.extend(Ext.util.Draggable, {
         }
     },
 
+    // @private
     onDragEnd: function(e) {
         if (Ext.util.Scroller.superclass.onDragEnd.apply(this, arguments) !== true)
             return;
@@ -370,18 +422,43 @@ Ext.util.Scroller = Ext.extend(Ext.util.Draggable, {
         }
     },
 
+    // @private
     onOrientationChange: function() {
         Ext.util.Scroller.superclass.onOrientationChange.apply(this, arguments);
         
         this.snapToBoundary();
     },
 
+    // @private
     fireScrollEndEvent: function() {
-        this.isAnimating = false;
+        this.isMomentumAnimating = false;
         this.snapToBoundary();
         this.fireEvent('scrollend', this, this.getOffset());
+        //<debug>
+        this.endTime = Date.now();
+        //</debug>
+        this.snapToSlot();
     },
 
+
+    //<debug>
+    /*
+     * Get the last actual fps performed by this Scroller. Useful for benchmarking
+     * @return {Number} The actual fps
+     */
+    getLastActualFps: function() {
+        var duration = (this.endTime - this.startTime) * 1000;
+        return this.framesHandled / duration;
+    },
+    //</debug>
+
+    /*
+     * Similar to {@link Ext.util.Scroller#setOffset setOffset}, but will stop any existing animation
+     * @param {Object} pos The new scroll position, e.g {x: 100, y: 200}
+     * @param {Number/Boolean} animate Whether or not to animate while changing the scroll position.
+     * If it's a number, will be treated as the duration in ms
+     * @return {Ext.util.Scroller} this This Scroller
+     */
     scrollTo: function(pos, animate) {
         this.stopMomentumAnimation();
 
@@ -391,12 +468,28 @@ Ext.util.Scroller = Ext.extend(Ext.util.Draggable, {
 
         return this;
     },
-    
-    setSnap : function(snap) {
+
+    // @private
+    setSnap: function(snap) {
         this.snap = snap;
     },
 
+    /*
+     * Snap this scrollable content back to the container's boundary, if it's currently out of bound
+     * @return {Ext.util.Scroller} this This Scroller
+     */
     snapToBoundary: function() {
+        var offset = this.offsetBoundary.restrict(this.offset);
+        offset.round();
+        
+        if (!this.offset.equals(offset)) {
+            this.setOffset(offset);
+        }
+
+        return this;
+    },
+
+    snapToSlot: function() {
         var offset = this.offsetBoundary.restrict(this.offset);
         offset.round();
         
@@ -424,13 +517,9 @@ Ext.util.Scroller = Ext.extend(Ext.util.Draggable, {
                 this.scrollTo({x: -offset.x, y: -offset.y}, this.snapDuration);
             }
         }
-        else if (!this.offset.equals(offset)) {
-            this.setOffset(offset);
-        }
-
-        return this;
     },
 
+    // @private
     startMomentumAnimation: function(e) {
         if (
             (!this.momentum || !((e.event.timeStamp - this.lastEventTime) <= this.startMomentumResetTime)) &&
@@ -490,20 +579,21 @@ Ext.util.Scroller = Ext.extend(Ext.util.Draggable, {
         }, this);
         
         if (this.isDecelerating.x || this.isDecelerating.y || this.isBouncing.x || this.isBouncing.y) {
-            this.isAnimating = true;
+            this.isMomentumAnimating = true;
             this.framesHandled = 0;
             this.fireEvent('momentumanimationstart');
-            this.animationTimer = Ext.defer(this.handleFrame, this.frameDuration, this);
+            this.momentumAnimationTimer = Ext.defer(this.handleMomentumAnimationFrame, this.frameDuration, this);
             return true;
         }
 
         return false;
     },
 
+    // @private
     stopMomentumAnimation: function() {
-        if (this.isAnimating) {
-            if (this.animationTimer) {
-                clearTimeout(this.animationTimer);
+        if (this.isMomentumAnimating) {
+            if (this.momentumAnimationTimer) {
+                clearTimeout(this.momentumAnimationTimer);
             }
 
             this.isDecelerating = {};
@@ -519,14 +609,14 @@ Ext.util.Scroller = Ext.extend(Ext.util.Draggable, {
     /**
      * @private
      */
-    handleFrame : function() {
-        if (!this.isAnimating) {
+    handleMomentumAnimationFrame : function() {
+        if (!this.isMomentumAnimating) {
             return;
         }
 
-        this.animationTimer = Ext.defer(this.handleFrame, this.frameDuration, this);
+        this.momentumAnimationTimer = Ext.defer(this.handleMomentumAnimationFrame, this.frameDuration, this);
         
-        var currentTime = (new Date()).getTime(),
+        var currentTime = Date.now(),
             newOffset = this.offset.copy(),
             currentVelocity,
             restrictedOffset,
@@ -583,12 +673,14 @@ Ext.util.Scroller = Ext.extend(Ext.util.Draggable, {
             return;
         }
 
-//        this.framesHandled++;
-
+        //<debug>
+        this.framesHandled++;
+        //</debug>
+        
         this.setOffset(newOffset);
-
     },
 
+    // Inherited docs
     destroy: function() {
         return Ext.util.Scroller.superclass.destroy.apply(this, arguments);
     }
@@ -598,20 +690,17 @@ Ext.util.Scroller.Animation = {};
 
 Ext.util.Scroller.Animation.Deceleration = Ext.extend(Ext.util.Draggable.Animation.Abstract, {
     acceleration: 30,
-    omega: null,
+    theta: null,
     startVelocity: null,
     
     getOffset: function() {
-        return this.startOffset - (
-            (this.startVelocity / Math.log(this.omega)) -
-            (this.startVelocity * (this.getFrictionFactor() / Math.log(this.omega)))
-        );
+        return this.startOffset - this.startVelocity * (1 - this.getFrictionFactor()) / this.theta;
     },
     
     getFrictionFactor : function() {
-        var deltaTime = (new Date()).getTime() - this.startTime;
+        var deltaTime = Date.now() - this.startTime;
 
-        return Math.pow(this.omega, deltaTime / this.acceleration);        
+        return Math.exp(deltaTime / this.acceleration * this.theta);
     }
 });
 
@@ -621,7 +710,7 @@ Ext.util.Scroller.Animation.Bouncing = Ext.extend(Ext.util.Draggable.Animation.A
     startVelocity: null,
     
     getOffset: function() {
-        var deltaTime = ((new Date()).getTime() - this.startTime),
+        var deltaTime = (Date.now() - this.startTime),
             powTime = (deltaTime / this.acceleration) * Math.pow(Math.E, -this.springTension * (deltaTime / this.acceleration));
 
         return this.startOffset + (this.startVelocity * powTime);
@@ -632,14 +721,18 @@ Ext.util.Scroller.Animation.Bouncing = Ext.extend(Ext.util.Draggable.Animation.A
  * @class Ext.util.Indicator
  * @extends Object
  *
- * Scroll indicator for the ScrollView
+ * Represent the Scroll Indicator to be used in a {@link Ext.util.ScrollView ScrollView}
  */
 Ext.util.Scroller.Indicator = Ext.extend(Object, {
     baseCls: 'x-scrollbar',
-  
-    type: 'horizontal',
-    
+
     ui: 'dark',
+    
+    /**
+     * @cfg {String} type
+     * The type of this Indicator, valid values are 'vertical' or 'horizontal'
+     */
+    type: 'horizontal',
 
     constructor: function(container, config) {
         this.container = container;
@@ -650,9 +743,15 @@ Ext.util.Scroller.Indicator = Ext.extend(Object, {
             cls: [this.baseCls, this.baseCls + '-' + this.type, this.baseCls + '-' + this.ui].join(' ')
         });
 
+        this.offset = new Ext.util.Offset();
+
         this.hide();
     },
 
+    /*
+     * Hide this Indicator
+     * @return {Ext.util.Scroller.Indicator} this This Indicator
+     */
     hide: function() {
         var me = this;
 
@@ -667,6 +766,10 @@ Ext.util.Scroller.Indicator = Ext.extend(Object, {
         return this;
     },
 
+    /*
+     * Show this Indicator
+     * @return {Ext.util.Scroller.Indicator} this This Indicator
+     */
     show: function() {
         if (this.hideTimer) {
             clearTimeout(this.hideTimer);
@@ -677,18 +780,28 @@ Ext.util.Scroller.Indicator = Ext.extend(Object, {
         return this;
     },
 
+    /*
+     * Set the visibility of this Indicator, a wrapper function for
+     * {@link Ext.util.Scroller.Indicator#show show} and {@link Ext.util.Scroller.Indicator#show hide}
+     * @param {Boolean} isVisible True to show this Indicator, false to hide
+     * @return {Ext.util.Scroller.Indicator} this This Indicator
+     */
     setVisibility: function(isVisible) {
-        this[isVisible ? 'show' : 'hide']();
-
-        return this;
+        return this[isVisible ? 'show' : 'hide']();
     },
 
+    /*
+     * Adjust the size of this Indicator, will change the height if {@link Ext.util.Scroller.Indicator#type type}
+     * is 'vertical', and width for 'horizontal'
+     * @param {Number} size The new size to change to
+     * @return {Ext.util.Scroller.Indicator} this This Indicator
+     */
     setSize: function(size) {
         if (this.size && size > this.size) {
             size = Math.round(size);
         }
         
-        // this.el.setStyle(height) is cleaner here but let's save some performance...
+        // this.el.setStyle(height) is cleaner here but let's save some little performance...
         this.el.dom.style[(this.type == 'horizontal') ? 'width' : 'height'] = size + 'px';
 
         this.size = size;
@@ -696,12 +809,19 @@ Ext.util.Scroller.Indicator = Ext.extend(Object, {
         return this;
     },
 
-    setOffset: function(p) {
-        p = Math.round(p);
+    /*
+     * Set the offset position of this Indicator, relative to its container
+     * @param {Number} offset The new offset
+     * @return {Ext.util.Scroller.Indicator} this This Indicator
+     */
+    setOffset: function(offset) {
+        if (this.type == 'vertical') {
+            this.offset.y = offset;
+        } else {
+            this.offset.x = offset;
+        }
         
-        var offset = (this.type == 'vertical') ? [0, p] : [p];
-        
-        Ext.Element.cssTransform(this.el, {translate: offset});
+        Ext.Element.cssTranslate(this.el, this.offset);
 
         return this;
     }

@@ -8,8 +8,9 @@ Ext.applyIf(Ext.Element, {
     getComputedTransformOffset: function(el) {
         if (el instanceof Ext.Element)
             el = el.dom;
-
-        var cssMatrix = new WebKitCSSMatrix(window.getComputedStyle(el).webkitTransform);
+            
+        var transform = window.getComputedStyle(el).webkitTransform,
+            cssMatrix = transform != 'none' ? new WebKitCSSMatrix(transform) : new WebKitCSSMatrix();
 
         if (typeof cssMatrix.m41 != 'undefined') {
             return new Ext.util.Offset(cssMatrix.m41, cssMatrix.m42);
@@ -25,6 +26,7 @@ Ext.applyIf(Ext.Element, {
      * @param {Ext.Element/Element} el the element
      * @param {Object} transforms an object with all transformation to be applied. The keys are transformation method names,
      * the values are arrays of params or a single number if there's only one param e.g:
+     *
      * {
      *      translate: [0, 1, 2],
      *      scale: 0.5,
@@ -44,7 +46,7 @@ Ext.applyIf(Ext.Element, {
         });
 
         // To enable hardware accelerated transforms on iOS (v3 only, fixed in v4?) we have to build the string manually
-        // Other than that simply apply the matrix works perfectly on all the rest of devices
+        // Other than that simply apply the matrix works perfectly on the rest of devices including Androids & Blackberry
         if (Ext.supports.CSS3DTransform) {
             el.style.webkitTransform = 'matrix3d(' +
                                             m.m11+', '+m.m12+', '+m.m13+', '+m.m14+', '+
@@ -55,5 +57,28 @@ Ext.applyIf(Ext.Element, {
         } else {
             el.style.webkitTransform = m;
         }
+    },
+
+    /**
+     * Translate an element using CSS 3 in 2D. This is supposed to be faster than cssTransform when we only need to translate
+     * an element without reserving its original matrix
+     * @param {Ext.Element/Element} el the element
+     * @param {Ext.util.Offset/Object} offset The new offset with format
+     *
+     * {
+     *      x: offsetX,
+     *      y: offsetY
+     * }
+     */
+    cssTranslate: function(el, offset) {
+        if (el instanceof Ext.Element)
+            el = el.dom;
+
+        if (Ext.supports.CSS3DTransform) {
+            el.style.webkitTransform = 'translate3d('+offset.x+'px, '+offset.y+'px, 0px)';
+        } else {
+            el.style.webkitTransform = 'translate('+offset.x+'px, '+offset.y+'px)';
+        }
     }
+
 });

@@ -1,6 +1,6 @@
 /**
  * @class Ext.form.Spinner
- * @extends Ext.form.Field
+ * @extends Ext.form.Number
  * <p>Wraps an HTML5 number field. Example usage:
  * <pre><code>
 new Ext.form.Spinner({
@@ -66,7 +66,7 @@ Ext.form.Spinner = Ext.extend(Ext.form.Number, {
     autoCapitalize: false,
 
     renderTpl: [
-        '<tpl if="label"><label <tpl if="fieldEl">for="{inputId}"</tpl> class="x-form-label"><span>{label}</span></label></tpl>',
+        '<tpl if="label"><div class="x-form-label"><span>{label}</span></div></tpl>',
         '<tpl if="fieldEl">',
             '<div class="{componentCls}-body">',
                 '<div class="{componentCls}-down"><span>-</span></div>',
@@ -206,6 +206,16 @@ Ext.form.Spinner = Ext.extend(Ext.form.Number, {
         btn.el.removeCls('x-button-pressed');
     },
 
+    setValue: function(value) {
+        value = parseFloat(value);
+
+        if (isNaN(value)) {
+            value = this.defaultValue;
+        }
+
+        Ext.form.Spinner.superclass.setValue.call(this, value);
+    },
+
     // @private
     spin: function(down) {
         var value = parseFloat(this.getValue()),
@@ -246,6 +256,7 @@ Ext.form.Spinner = Ext.extend(Ext.form.Number, {
 
 Ext.reg('spinnerfield', Ext.form.Spinner);
 
+//<deprecated since=0.99>
 /**
  * @class Ext.form.SpinnerField
  * @extends Ext.form.Spinner
@@ -260,3 +271,4 @@ Ext.form.SpinnerField = Ext.extend(Ext.form.Spinner, {
         Ext.form.SpinnerField.superclass.constructor.apply(this, arguments);
     }
 });
+//</deprecated>

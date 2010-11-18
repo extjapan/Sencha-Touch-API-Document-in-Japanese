@@ -35,7 +35,7 @@ Ext.form.Field = Ext.extend(Ext.Component,  {
     /**
      * @cfg {String} name The field's HTML name attribute (defaults to '').
      * <b>Note</b>: this property must be set if this field is to be automatically included with
-     * {@link Ext.form.BasicForm#submit form submit()}.
+     * {@link Ext.form.FormPanel#submit form submit()}.
      */
 
     /**
@@ -63,7 +63,9 @@ Ext.form.Field = Ext.extend(Ext.Component,  {
     disabled: false,
 
     renderTpl: [
-        '<tpl if="label"><div class="x-form-label"><span>{label}</span></div></tpl>',
+        '<tpl if="label">',
+            '<div class="x-form-label"><span>{label}</span></div>',
+        '</tpl>',
         '<tpl if="fieldEl">',
             '<div class="x-form-field-container"><input id="{inputId}" type="{inputType}" name="{name}" class="{fieldCls}"',
                 '<tpl if="tabIndex">tabIndex="{tabIndex}" </tpl>',
@@ -76,15 +78,16 @@ Ext.form.Field = Ext.extend(Ext.Component,  {
             '<tpl if="useMask"><div class="x-field-mask"></div></tpl>',
             '</div>',
             '<tpl if="useClearIcon"><div class="x-field-clear-container"><div class="x-field-clear x-hidden-visibility">&#215;</div><div></tpl>',
-        '</tpl>',
+        '</tpl>'
     ],
 
     // @private
     isFormField: true,
 
     /**
-     * @cfg {Boolean} autoCreateField True to automatically create the field input element on render. This is true by default, but should
-     * be set to false for any Ext.Field subclasses that don't need an HTML input (e.g. Ext.Slider and similar)
+     * @cfg {Boolean} autoCreateField True to automatically create the field input element on render.
+     * This is true by default, but should be set to false for any Ext.Field subclasses that don't
+     * need an HTML input (e.g. Ext.Slider and similar)
      */
     autoCreateField: true,
 
@@ -100,19 +103,26 @@ Ext.form.Field = Ext.extend(Ext.Component,  {
      * @cfg {String} label The label to associate with this field. Defaults to <tt>null</tt>.
      */
     label: null,
-    
-    labelWidth: 100, // Currently unsupported
 
     /**
-     * @cfg {String} labelAlign The location to render the label of the field. Acceptable values are 'top' and 'left', defaults to 'left'
+     * @cfg {Mixed} labelWidth The width of the label, can be any valid CSS size. E.g '20%', '6em', '100px'.
+     * Defaults to <tt>'30%'</tt>
+     */
+    labelWidth: '30%',
+
+    /**
+     * @cfg {String} labelAlign The location to render the label of the field. Acceptable values are 'top' and 'left'.
+     * Defaults to <tt>'left'</tt>
      */
     labelAlign: 'left',
 
     /**
-     * @cfg {Boolean} required True to make this field required. Note: this only causes a visual indication. Doesn't prevent user from submitting the form.
+     * @cfg {Boolean} required True to make this field required. Note: this only causes a visual indication.
+     * Doesn't prevent user from submitting the form.
      */
     required: false,
 
+    // @private
     useMask: false,
 
     // @private
@@ -157,34 +167,63 @@ Ext.form.Field = Ext.extend(Ext.Component,  {
     applyRenderSelectors: function() {
         this.renderSelectors = Ext.applyIf(this.renderSelectors || {}, {
             mask: '.x-field-mask',
-            labelEl: 'label',
+            labelEl: '.x-form-label',
             fieldEl: '.' + Ext.util.Format.trim(this.renderData.fieldCls).replace(/ /g, '.')
         });
 
         Ext.form.Field.superclass.applyRenderSelectors.call(this);
     },
-    
+
+    /**
+     * @private
+     */
     initRenderData: function() {
         Ext.form.Field.superclass.initRenderData.apply(this, arguments);
         
         Ext.applyIf(this.renderData, {
-            disabled    :   this.disabled,
-            fieldCls    :   'x-input-' + this.inputType + (this.inputCls ? ' ' + this.inputCls: ''),
-            fieldEl     :   !this.fieldEl && this.autoCreateField,
-            inputId     :   Ext.id(),
-            label       :    this.label,
-            labelAlign  :   'x-label-align-' + this.labelAlign,
-            name        :   this.getName(),
-            required    :   this.required,
-            style       :   this.style,
-            tabIndex    :   this.tabIndex,
-            inputType   :   this.inputType,
-            useMask     :   this.useMask
+            disabled        :   this.disabled,
+            fieldCls        :   'x-input-' + this.inputType + (this.inputCls ? ' ' + this.inputCls: ''),
+            fieldEl         :   !this.fieldEl && this.autoCreateField,
+            inputId         :   Ext.id(),
+            label           :    this.label,
+            labelAlign      :   'x-label-align-' + this.labelAlign,
+            name            :   this.getName(),
+            required        :   this.required,
+            style           :   this.style,
+            tabIndex        :   this.tabIndex,
+            inputType       :   this.inputType,
+            useMask         :   this.useMask
         });
         
         return this.renderData;
     },
-    
+
+    // @private
+    initEvents: function() {
+        Ext.form.Field.superclass.initEvents.apply(this, arguments);
+        
+        if (this.fieldEl) {
+            if (this.useMask && this.mask) {
+                if (Ext.is.iOS) {
+                    this.mon(this.mask, {
+                        tap: Ext.emptyFn,
+                        click: this.onMaskTap,
+                        fireClickEvent: true,
+                        scope: this
+                    });
+                } else {
+                    this.mon(this.mask, {
+                        tap: this.onMaskTap,
+                        scope: this
+                    });
+                }
+            }
+        }
+    },
+
+    /**
+     * @private
+     */
     onRender: function() {
         Ext.form.Field.superclass.onRender.apply(this, arguments);
         
@@ -199,18 +238,18 @@ Ext.form.Field = Ext.extend(Ext.Component,  {
 
         this.el.addCls(cls);
     },
-    
-    initEvents: function() {
-        Ext.form.Field.superclass.initEvents.call(this);
-        
-        if (this.fieldEl) {
-            if (this.useMask && this.mask) {
-                this.mon(this.mask, {
-                    click: this.onMaskTap,
-                    scope: this
-                });
-            }
-        }        
+
+    /**
+     * @private
+     */
+    afterRender: function() {
+        Ext.form.Field.superclass.afterRender.apply(this, arguments);
+
+        if (this.label) {
+            this.setLabelWidth(this.labelWidth);
+        }
+
+        this.initValue();
     },
 
     isDisabled: function() {
@@ -260,23 +299,21 @@ Ext.form.Field = Ext.extend(Ext.Component,  {
     },
 
     // @private
-    afterRender: function() {
-        Ext.form.Field.superclass.afterRender.call(this);
-        
-        this.initValue();
-    },
-
     onMaskTap: function(e) {
         if (this.disabled) {
-            return;
+            return false;
         }
 
-        if (this.mask) {
-            this.hideMask();
-            this.maskCorrectionTimer = Ext.defer(this.showMask, 1000, this);
+        if (Ext.is.iOS && e.browserEvent && !e.browserEvent.isManufactured) {
+            e.preventDefault();
+            e.stopPropagation();
+            return false;
         }
+
+        return true;
     },
 
+    // @private
     showMask: function(e) {
         if (this.mask) {
             this.mask.setStyle('display', 'block');
@@ -319,6 +356,19 @@ Ext.form.Field = Ext.extend(Ext.Component,  {
 
         if (this.rendered && this.fieldEl) {
             this.fieldEl.dom.value = (Ext.isEmpty(value) ? '' : value);
+        }
+
+        return this;
+    },
+
+    /**
+     * Set the label width
+     * @param {Mixed} width The width of the label, can be any valid CSS size. E.g '20%', '6em', '100px'
+     * @return {Ext.form.Field} this
+     */
+    setLabelWidth: function(width) {
+        if (this.labelEl) {
+            this.labelEl.setWidth(width);
         }
 
         return this;

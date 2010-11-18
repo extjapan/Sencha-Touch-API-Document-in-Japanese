@@ -1,4 +1,3 @@
-
 /**
  * @class Ext.form.Checkbox
  * @extends Ext.form.Field
@@ -44,7 +43,7 @@ Ext.form.Checkbox = Ext.extend(Ext.form.Field, {
     },
     
     renderTpl: [
-        '<tpl if="label"><label <tpl if="fieldEl">for="{inputId}"</tpl> class="x-form-label"><span>{label}</span></label></tpl>',
+        '<tpl if="label"><div class="x-form-label"><span>{label}</span></div></tpl>',
         '<tpl if="fieldEl"><input id="{inputId}" type="{inputType}" name="{name}" class="{fieldCls}" tabIndex="-1" ',
             '<tpl if="checked"> checked </tpl>',
             '<tpl if="style">style="{style}" </tpl> value="{inputValue}" />',
@@ -56,7 +55,7 @@ Ext.form.Checkbox = Ext.extend(Ext.form.Field, {
         var isChecked = this.getBooleanIsChecked(this.checked);
 
         Ext.apply(this.renderData, {
-            inputValue  : this.value || '',
+            inputValue  : String(this.value),
             checked     : isChecked
         });
 
@@ -64,8 +63,10 @@ Ext.form.Checkbox = Ext.extend(Ext.form.Field, {
 
         if (this.fieldEl) {
             this.mon(this.fieldEl, {
-                change: this.onChange,
-                scope: this
+                tap: Ext.emptyFn,
+                click: this.onChange,
+                scope: this,
+                fireClickEvent: true
             });
 
             this.setChecked(isChecked);
@@ -74,7 +75,19 @@ Ext.form.Checkbox = Ext.extend(Ext.form.Field, {
     },
     
     // @private
-    onChange: function() {
+    onChange: function(e) {
+        if (e) {
+            if (e.browserEvent) {
+                e = e.browserEvent;
+            }
+
+            if (!e.isManufactured) {
+                e.preventDefault();
+                e.stopPropagation();
+                return;
+            }
+        }
+        
         if (this.isChecked()) {
             this.fireEvent('check', this);
         } else {
@@ -87,7 +100,11 @@ Ext.form.Checkbox = Ext.extend(Ext.form.Field, {
      * @return {Boolean} True if checked, else otherwise
      */
     isChecked: function() {
-        return this.fieldEl.dom.checked || false;
+        if (this.rendered) {
+            return this.fieldEl.dom.checked || false;
+        } else {
+            return !!this.checked;
+        }
     },
 
     /**
@@ -95,8 +112,26 @@ Ext.form.Checkbox = Ext.extend(Ext.form.Field, {
      * @return {Ext.form.Checkbox} this This checkbox
      */
     setChecked: function(checked) {
-        this.fieldEl.dom.checked = this.getBooleanIsChecked(checked);
+        var newState = this.getBooleanIsChecked(checked),
+            rendered = this.rendered,
+            currentState,
+            field;
+    
+        if (rendered) {
+            field = this.fieldEl.dom;
+            currentState = field.checked;
+        } else {
+            currentState = !!this.checked;
+        }
 
+        if (currentState != newState) {
+            if (rendered) {
+                field.checked = newState;
+            } else {
+                this.checked = newState;
+            }
+            this.onChange();
+        }
         return this;
     },
 
@@ -169,10 +204,19 @@ Ext.form.Checkbox = Ext.extend(Ext.form.Field, {
         });
         
         return this;
+    },
+
+    //Inherited docs
+    setValue: function(value) {
+        value = String(value);
+
+        Ext.form.Checkbox.superclass.setValue.call(this, value);
     }
 });
 
 Ext.reg('checkboxfield', Ext.form.Checkbox);
 
+//<deprecated since=0.99>
 //DEPRECATED - remove this in 1.0. See RC1 Release Notes for details
 Ext.reg('checkbox', Ext.form.Checkbox);
+//</deprecated>

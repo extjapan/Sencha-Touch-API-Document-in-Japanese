@@ -5,6 +5,10 @@
  * navigate through a list (see {@link Ext.List}) of data. When a user taps on an item in the {@link Ext.IndexBar}, it will fire
  * the <tt>{@link #index}</tt> event.</p>
  *
+ * <h2>Screenshot:</h2>
+ * <p><img src="doc_resources/Ext.IndexBar/screenshot.png" /></p>
+ * 
+ * <h2>Example code:</h2>
  * <p>Here is an example of the usage in a {@link Ext.List}:</p>
  * <pre><code>
 Ext.regModel('Contact', {

@@ -138,8 +138,7 @@ Ext.DataView.override({
             /**
              * @event selectionchange
              * Fires when the selected nodes change.
-             * @param {Ext.DataView} this
-             * @param {Array} selections Array of the selected nodes
+             * @param {Ext.DataViewSelectionModel} selectionModel The selection model of this DataView object
              * @param {Array} records Array of the selected records
              */
             "selectionchange",

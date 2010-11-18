@@ -43,9 +43,11 @@ Ext.form.Radio = Ext.extend(Ext.form.Checkbox, {
      */
     setGroupValue: function(value) {
         var field,
-            fields = this.getSameGroupFields();
+            fields = this.getSameGroupFields(),
+            i = 0,
+            len = fields.length;
 
-        for (var i=0; i<fields.length; i++) {
+        for (; i < len; i++) {
             field = fields[i];
 
             if (field.getValue() == value) {
@@ -58,5 +60,7 @@ Ext.form.Radio = Ext.extend(Ext.form.Checkbox, {
 
 Ext.reg('radiofield', Ext.form.Radio);
 
+//<deprecated since=0.99>
 //DEPRECATED - remove this in 1.0. See RC1 Release Notes for details
 Ext.reg('radio', Ext.form.Radio);
+//</deprecated>

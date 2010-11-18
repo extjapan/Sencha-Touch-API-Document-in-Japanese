@@ -1,6 +1,6 @@
 /**
  * @class Ext.form.TextArea
- * @extends Ext.form.Field
+ * @extends Ext.form.Text
  * <p>Wraps a textarea. See {@link Ext.form.FormPanel FormPanel} for example usage.</p>
  * @xtype textareafield
  */
@@ -13,9 +13,9 @@ Ext.form.TextArea = Ext.extend(Ext.form.Text, {
     maxRows: undefined,
     
     autoCapitalize: false,
-    
+
     renderTpl: [
-        '<tpl if="label"><label <tpl if="fieldEl">for="{inputId}"</tpl> class="x-form-label"><span>{label}</span></label></tpl>',
+        '<tpl if="label"><div class="x-form-label"><span>{label}</span></div></tpl>',
         '<tpl if="fieldEl"><div class="x-form-field-container">',
             '<textarea id="{inputId}" type="{type}" name="{name}" class="{fieldCls}"',
             '<tpl if="tabIndex">tabIndex="{tabIndex}" </tpl>',
@@ -36,10 +36,16 @@ Ext.form.TextArea = Ext.extend(Ext.form.Text, {
         this.renderData.maxRows = this.maxRows;
         
         Ext.form.TextArea.superclass.onRender.apply(this, arguments);
+    },
+
+    onKeyUp: function(e) {
+        this.fireEvent('keyup', this, e);
     }
 });
 
 Ext.reg('textareafield', Ext.form.TextArea);
 
+//<deprecated since=0.99>
 //DEPRECATED - remove this in 1.0. See RC1 Release Notes for details
 Ext.reg('textarea', Ext.form.TextArea);
+//</deprecated>

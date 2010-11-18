@@ -1,9 +1,10 @@
 /**
  * @class Ext.Component
  * @extends Ext.lib.Component
- * <p>全てのExtコンポーネントの基底クラスです。Componentクラスを継承するクラスは {@link Ext.Container Container} クラスが提供する
- * 自動化されたコンポーネントのライフサイクル（生成、描画、破壊）に参加することができます。
- * コンポーネントをContainerに追加する方法は、Containerの生成時にContainerの@link Ext.Container#items items}を介して追加する方法と、Containerの{@link Ext.Container#add add}メソッドを使って動的に追加する方法があります。</p>
+ * <p>Base class for all Ext components.  All subclasses of Component may participate in the automated
+ * Ext component lifecycle of creation, rendering and destruction which is provided by the {@link Ext.Container Container} class.
+ * Components may be added to a Container through the {@link Ext.Container#items items} config option at the time the Container is created,
+ * or they may be added dynamically via the {@link Ext.Container#add add} method.</p>
  * <p>The Component base class has built-in support for basic hide/show and enable/disable behavior.</p>
  * <p>All Components are registered with the {@link Ext.ComponentMgr} on construction so that they can be referenced at any time via
  * {@link Ext#getCmp}, passing the {@link #id}.</p>
