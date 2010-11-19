@@ -1,21 +1,22 @@
 /**
  * @class Ext.Component
  * @extends Ext.lib.Component
- * <p>Base class for all Ext components.  All subclasses of Component may participate in the automated
- * Ext component lifecycle of creation, rendering and destruction which is provided by the {@link Ext.Container Container} class.
- * Components may be added to a Container through the {@link Ext.Container#items items} config option at the time the Container is created,
- * or they may be added dynamically via the {@link Ext.Container#add add} method.</p>
- * <p>The Component base class has built-in support for basic hide/show and enable/disable behavior.</p>
- * <p>All Components are registered with the {@link Ext.ComponentMgr} on construction so that they can be referenced at any time via
- * {@link Ext#getCmp}, passing the {@link #id}.</p>
- * <p>All user-developed visual widgets that are required to participate in automated lifecycle and size management should subclass Component (or
- * {@link Ext.BoxComponent} if managed box model handling is required, ie height and width management).</p>
- * <p>See the <a href="http://extjs.com/learn/Tutorial:Creating_new_UI_controls">Creating new UI controls</a> tutorial for details on how
- * and to either extend or augment ExtJs base classes to create custom Components.</p>
- * <p>Every component has a specific xtype, which is its Ext-specific type name, along with methods for checking the
- * xtype like {@link #getXType} and {@link #isXType}. This is the list of all valid xtypes:</p>
+ * <p>全てのExtコンポーネントの親となるクラスです。Componentクラスを継承するクラス（以下、コンポーネント）は、
+ * {@link Ext.Container Container}によって提供される自動化されたコンポーネントライフサイクル（生成、描画、破壊）に
+ * 組み込まれます。コンポーネントはContainerの生成時の{@link Ext.Container#items items}オプションを介してContainer
+ * に組み込みます。あるいは、Containerの{@link Ext.Container#add add}メソッドを使って動的に組み込むこともできます。</p>
+ * <p>Componentクラスには「表示/非表示」および「利用可/不可」をサポートするための基本的な機能が実装されています</p>
+ * <p>全てのコンポーネントはその生成時に{@link Ext.ComponentMgr}に登録され、プログラムのどこからでもその{@link #id}を
+ * {@link Ext#getCmp}メソッドに渡すことで取得することができます。</p>
+ * <p>独自のUI部品を開発する際、自動化されたコンポーネントサイクルやサイズ管理が必要なものについては、Component（あるいは
+ * そのサブクラス）を継承するようにしてください。</p>
+ * <p>独自のUI部品の開発にあたって、Sencha Touchが提供するクラスを継承するのか、それとも改造するのか、その他の詳細について
+ * は「<a href="http://www.sencha.com/learn/Tutorial:Creating_new_UI_controls">Creating new UI controls</a>」（英語）を
+ * 参照してください。</p>
+ * <p>全てのコンポーネントには、それを特定するためのxtypeというものが設定されています。また、xtypeを調べるための
+ * {@link #getXType}や{@link #isXType}といったメソッドも用意されています。予め定義されているxtypeは以下の通りです：</p>
  * <pre>
-xtype            Class
+xtype            クラス
 -------------    ------------------
 button           {@link Ext.Button}
 component        {@link Ext.Component}
@@ -27,7 +28,7 @@ toolbar          {@link Ext.Toolbar}
 spacer           {@link Ext.Spacer}
 tabpanel         {@link Ext.TabPanel}
 
-Form components
+フォームコンポーネント
 ---------------------------------------
 formpanel        {@link Ext.form.FormPanel}
 checkboxfield    {@link Ext.form.Checkbox}
@@ -42,76 +43,78 @@ textfield        {@link Ext.form.Text}
 togglefield      {@link Ext.form.Toggle}
 </pre>
  * @constructor
- * @param {Ext.Element/String/Object} config The configuration options may be specified as either:
+ * @param {Ext.Element/String/Object} config コンフィグオプションには以下のいずれかが指定できます：
  * <div class="mdetail-params"><ul>
- * <li><b>an element</b> :
- * <p class="sub-desc">it is set as the internal element and its id used as the component id</p></li>
- * <li><b>a string</b> :
- * <p class="sub-desc">it is assumed to be the id of an existing element and is used as the component id</p></li>
- * <li><b>anything else</b> :
- * <p class="sub-desc">it is assumed to be a standard config object and is applied to the component</p></li>
+ * <li><b>Element</b> :
+ * <p class="sub-desc">渡されたElementは内部要素として取り込まれ、Elementのidがコンポーネントのidとして設定されます。</p></li>
+ * <li><b>文字列</b> :
+ * <p class="sub-desc">生成済みのElementのidとして解釈され、同時にコンポーネントのidとして設定されます。</p></li>
+ * <li><b>その他</b> :
+ * <p class="sub-desc">コンフィグオブジェクトとして解釈され、オブジェクトのプロパティと値がコンポーネントにコピーされます。</p></li>
  * </ul></div>
  * @xtype component
  */
 Ext.Component = Ext.extend(Ext.lib.Component, {
     /**
     * @cfg {Object/String/Boolean} showAnimation
-    * The type of animation you want to use when this component is shown. If you set this
-    * this hide animation will automatically be the opposite.
+		* このコンポーネントを表示する際に利用するアニメーションの種類を指定します。このオプションを
+		* 設定すると、非表示にする場合のアニメーションは、ここで設定したものが反転したものに自動的に
+		* 設定されます。
     */
     showAnimation: null,
 
     /**
      * @cfg {Boolean} monitorOrientation
-     * Monitor Orientation change
+		 * 画面の回転を監視します。
      */
     monitorOrientation: false,
 
     /**
      * @cfg {Boolean} floatingCls
-     * The class that is being added to this component when its floating.
-     * (defaults to x-floating)
+		 * このコンポーネントがフロート状態の場合に追加されるCSSクラスを指定します（デフォルト値は
+		 * x-floating）。
      */
     floatingCls: 'x-floating',
 
     /**
     * @cfg {Boolean} hideOnMaskTap
-    * True to automatically bind a tap listener to the mask that hides the window.
-    * Defaults to true. Note: if you set this property to false you have to programmaticaly
-    * hide the overlay.
+		* trueを設定すると、このコンポーネントがモーダル状態で表示されている際、同時に表示されている
+		* マスクをタップすることで自動的にコンポーネントが非表示になります。デフォルト値はtrue。
+		* 注意：falseに設定した場合には、このコンポーネントを隠す処理を別途記述する必要があります。
     */
     hideOnMaskTap: true,
     
     /**
     * @cfg {Boolean} stopMaskTapEvent
-    * True to stop the event that fires when you click outside the floating component.
-    * Defalts to true.
+		* trueを設定すると、このコンポーネントががモーダル状態で表示されている際、同時に表示されている
+		* マスクをタップすることで発行されるイベントを止めることができます。デフォルト値はtrue。
     */    
     stopMaskTapEvent: true,
 
     /**
      * @cfg {Boolean} centered
-     * Center the Component. Defaults to false.
+		 * コンポーネントを中心に配置します。デフォルトはfalse。
      */
     centered: false,
 
     /**
      * @cfg {Boolean} modal
-     * True to make the Component modal and mask everything behind it when displayed, false to display it without
-     * restricting access to other UI elements (defaults to false).
+		 * trueを設定すると、このコンポーネントがされた際にモーダル状態（その他の全ての部品にマスクをかけて、
+		 * このコンポーネントを最上位に表示）にします。falseにすると、その他のUI部品へのアクセスが制限されません。
+		 * デフォルト値はfalse。
      */
     modal: false,
 
     /**
      * @cfg {Mixed} scroll
-     * Configure the component to be scrollable. Acceptable values are:
+		 * コンポーネントをスクロール可能なように設定します。設定可能な値は：
      * <ul>
-     * <li>'horizontal', 'vertical', 'both' to enabling scrolling for that direction.</li>
-     * <li>A {@link Ext.util.Scroller Scroller} configuration.</li>
-     * <li>false to explicitly disable scrolling.</li>
+     * <li>'horizontal'（横方向）、'vertical'（縦方向）、'both'（両方向）のいずれかを設定することで設定した方向にスクロール可能となります</li>
+     * <li>{@link Ext.util.Scroller Scroller}クラスのコンフィグオプション</li>
+     * <li>falseを渡すことで明示的にスクロールを不可に設定できます</li>
      * </ul>
-     * 
-     * Enabling scrolling immediately sets the monitorOrientation config to true (for {@link Ext.Panel Panel})
+     *
+		 * スクロールを可能にするとmonitorOrieantaionオプションは自動的にtrueに設定されます（{@link Ext.Panel Panel}クラス）
      */
 
     // @private
@@ -119,20 +122,20 @@ Ext.Component = Ext.extend(Ext.lib.Component, {
         this.addEvents(
             /**
              * @event beforeorientationchange
-             * Fires before the orientation changes, if the monitorOrientation
-             * configuration is set to true. Return false to stop the orientation change.
+						 * monitorOrienationがtrueに設定されていると、画面の回転に伴いこのコンポーネントが回転する前に
+						 * このイベントが発行されます。イベントリスナーがfalseを返すことでコンポーネントの回転を中止
+						 * することができます。
              * @param {Ext.Panel} this
-             * @param {String} orientation 'landscape' or 'portrait'
+             * @param {String} orientation 'landscape'または'portrait'
              * @param {Number} width
              * @param {Number} height
              */
             'beforeorientationchange',
             /**
              * @event orientationchange
-             * Fires when the orientation changes, if the monitorOrientation
-             * configuration is set to true.
+						 * monotorOrientationがtrueに設定されていると、画面の回転に伴いこのコンポーネントが回転した後に発行されます。
              * @param {Ext.Panel} this
-             * @param {String} orientation 'landscape' or 'portrait'
+             * @param {String} orientation 'landscape'または'portrait'
              * @param {Number} width
              * @param {Number} height
              */
@@ -226,8 +229,8 @@ Ext.Component = Ext.extend(Ext.lib.Component, {
     },
 
     /**
-     * Show the component.
-     * @param {Object/String/Boolean} animation (optional) Defaults to false.
+     * コンポーネントを表示します。
+     * @param {Object/String/Boolean} animation オプション。デフォルト値はfalse。
      */
     show : function(animation) {
         var rendered = this.rendered;
@@ -248,10 +251,11 @@ Ext.Component = Ext.extend(Ext.lib.Component, {
     },
 
     /**
-     * Show this component relative another component or element.
-     * @param {Mixed} alignTo Element or Component
+		 * コンポーネントは他のコンポーネントまたは要素の近くに表示します。表示位置は自動的に決定されます。
+     * @param {Mixed} alignTo ElementまたはComponent
      * @param {Object/String/Boolean} animation
-     * @param {Boolean} allowOnSide true to allow this element to be aligned on the left or right.
+     * @param {Boolean} allowOnSide alignToで指定した対象の左右に配置を許可するかを指定
+     * @param {Boolean} anchor trueを指定すると、アンカー要素を表示 
      * @returns {Ext.Component} this
      */
     showBy : function(alignTo, animation, allowSides, anchor) {
@@ -398,9 +402,10 @@ Ext.Component = Ext.extend(Ext.lib.Component, {
     },
 
     /**
-     * Show this component centered of its parent or the window
-     * This only applies when the component is floating.
-     * @param {Boolean} centered True to center, false to remove centering
+		 * このコンポーネントをそのコンテナあるいはウィンドウの中心に配置します。
+		 * このメソッドはコンポーネントがフロート状態のときのみ有効です。
+     * @param {Boolean} centered trueで中心に配置、falseで中心配置を解除
+     * @param {Boolean} update trueを設定することで、コンポーネントをすぐに中心に配置 
      * @returns {Ext.Component} this
      */
     setCentered : function(centered, update) {
@@ -423,8 +428,8 @@ Ext.Component = Ext.extend(Ext.lib.Component, {
     },
 
     /**
-     * Hide the component
-     * @param {Object/String/Boolean} animation (optional) Defaults to false.
+		 * コンポーネントを非表示にします。
+     * @param {Object/String/Boolean} animation オプション。デフォルト値はfalse。
      */
     hide : function(animation) {
         if (!this.hidden && this.fireEvent('beforehide', this) !== false) {
@@ -534,9 +539,10 @@ Ext.Component = Ext.extend(Ext.lib.Component, {
     },
 
     /**
-     * Sets a Component as scrollable.
+		 * このコンポーネントをスクロール可能にします。
      * @param {Mixed} config
-     * Acceptable values are a Ext.Scroller configuration, 'horizontal', 'vertical', 'both', and false
+		 * 指定可能な値は、Ext.Scrollerのコンフィグオプション、'horizontal'（横方向）、'vertical'（縦方向）、
+		 * 'both'（両方向）、そしてfalseです。
      */
     setScrollable : function(config) {
         if (!this.rendered) {
@@ -571,7 +577,7 @@ Ext.Component = Ext.extend(Ext.lib.Component, {
     },
 
     /**
-     * Sets a Component as floating.
+		 * コンポーネントをフロート状態にします
      * @param {Boolean} floating
      * @param {Boolean} autoShow
      */
@@ -596,9 +602,9 @@ Ext.Component = Ext.extend(Ext.lib.Component, {
     },
 
     /**
-     * Sets a Component as draggable.
-     * @param {Boolean/Mixed} draggable On first call, this can be a config object for {@link Ext.util.Draggable}.
-     * Afterwards, if set to false, the existing draggable object will be disabled
+		 * コンポーネントをドラッグ可能にします。
+     * @param {Boolean/Mixed} draggable 最初にこのメソッドを呼ぶ場合には、trueまたは{@link Ext.util.Draggable}のコンフィグ
+		 * オプションが指定可能です。二回目以降はtrueまたはfalseを指定します。
      * @param {Boolean} autoShow
      */
     setDraggable : function(draggable, autoShow) {
@@ -624,10 +630,10 @@ Ext.Component = Ext.extend(Ext.lib.Component, {
     },
 
     /**
-     * Sets the orientation for the Panel.
-     * @param {String} orientation 'landscape' or 'portrait'
-     * @param {Number/String} width New width of the Panel.
-     * @param {Number/String} height New height of the Panel.
+		 * このコンポーネントの回転状態を設定します。
+     * @param {String} orientation 'landscape'または'portrait'
+     * @param {Number/String} width 回転後の幅
+     * @param {Number/String} height 回転後の高さ
      */
     setOrientation : function(orientation, w, h) {
         if (this.fireEvent('beforeorientationchange', this, orientation, w, h) !== false) {

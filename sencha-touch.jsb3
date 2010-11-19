@@ -212,7 +212,7 @@
             "id": "widgets",
             "files": [
                 {"jp": "done", "path": "src/platform/src/", "name": "Component.js"},
-                {"jp": "n/a", "path": "src/widgets/",      "name": "Component.js"},
+                {"jp": "done", "path": "src/widgets/",      "name": "Component.js"},
                 {"jp": "n/a", "path": "src/platform/src/", "name": "Container.js"},
                 {"jp": "n/a", "path": "src/widgets/",      "name": "Container.js"},
                 {"jp": "n/a", "path": "src/platform/src/", "name": "Panel.js"},
