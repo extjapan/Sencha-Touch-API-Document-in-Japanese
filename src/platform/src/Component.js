@@ -284,136 +284,136 @@ Ext.lib.Component = Ext.extend(Ext.util.Observable, {
         this.addEvents(
             /**
              * @event beforeactivate
-             * Fires before a Component has been visually activated.
-             * Returning false from an event listener can prevent the activate
-             * from occurring.
+						 * コンポーネントが有効化される前に発行されます。
+						 * イベントリスナーがfalseを返すことでactivateイベントの発行を
+						 * 中止することができます。
              * @param {Ext.Component} this
              */
              'beforeactivate',
             /**
              * @event activate
-             * Fires after a Component has been visually activated.
+						 * コンポーネントが有効化された後に発行されます。
              * @param {Ext.Component} this
              */
              'activate',
             /**
              * @event beforedeactivate
-             * Fires before a Component has been visually deactivated.
-             * Returning false from an event listener can prevent the deactivate
-             * from occurring.
+						 * コンポーネントが無効化される前に発行されます。
+						 * イベントリスナーがfalseを返すことでdeactivateイベントの発行を
+						 * 中止することができます。
              * @param {Ext.Component} this
              */
              'beforedeactivate',
             /**
              * @event deactivate
-             * Fires after a Component has been visually deactivated.
+						 * コンポーネントが無効化された後に発行されます。
              * @param {Ext.Component} this
              */
              'deactivate',
             /**
              * @event added
-             * Fires after a Component had been added to a Container.
+						 * コンポーネントがコンテナ（Container)に追加された際に発行されます。
              * @param {Ext.Component} this
-             * @param {Ext.Container} container Parent Container
-             * @param {Number} pos position of Component
+             * @param {Ext.Container} container 親となるコンテナ
+             * @param {Number} pos コンテナのitemsの中での位置
              */
              'added',
             /**
              * @event disable
-             * Fires after the component is disabled.
+						 * コンポーネントが利用不可状態になった際に発行されます。
              * @param {Ext.Component} this
              */
              'disable',
             /**
              * @event enable
-             * Fires after the component is enabled.
+						 * コンポーネントが利用可能状態になった際に発行されます。
              * @param {Ext.Component} this
              */
              'enable',
             /**
              * @event beforeshow
-             * Fires before the component is shown when calling the {@link #show} method.
-             * Return false from an event handler to stop the show.
+						 * {@link #show}メソッドを使ってコンポーネントを表示する直前に発行されます。
+						 * イベントリスナーがfalseを返すことでshowイベントを中止することができます。
              * @param {Ext.Component} this
              */
              'beforeshow',
             /**
              * @event show
-             * Fires after the component is shown when calling the {@link #show} method.
+						 * {@link #show}メソッドを使ってコンポーネントを表示した後に発行されます。
              * @param {Ext.Component} this
              */
              'show',
             /**
              * @event beforehide
-             * Fires before the component is hidden when calling the {@link #hide} method.
-             * Return false from an event handler to stop the hide.
+						 * {@link #hide}メソッドを使ってコンポーネントを非表示にする直前に発行されます。
+						 * イベントリスナーがfalseを返すことでhideイベントを中止することができます。
              * @param {Ext.Component} this
              */
              'beforehide',
             /**
              * @event hide
-             * Fires after the component is hidden.
-             * Fires after the component is hidden when calling the {@link #hide} method.
+						 * {@link #hide}メソッドを使ってコンポーネントを非表示にした後に発行されます。
              * @param {Ext.Component} this
              */
              'hide',
             /**
              * @event removed
-             * Fires when a component is removed from an Ext.Container
+						 * コンポーネントがコンテナ（Container)から削除された際に発行されます。
              * @param {Ext.Component} this
-             * @param {Ext.Container} ownerCt Container which holds the component
+             * @param {Ext.Container} ownerCt コンポーネントを保持していたコンテナ
              */
              'removed',
             /**
              * @event beforerender
-             * Fires before the component is {@link #rendered}. Return false from an
-             * event handler to stop the {@link #render}.
+						 * コンポーネントの要素が描画される直前に発行されます。
+						 * イベントリスナーがfalseを返すことでrederイベントを中止することができます。
              * @param {Ext.Component} this
              */
              'beforerender',
             /**
              * @event render
-             * Fires after the component markup is {@link #rendered}.
+						 * コンポーネントの要素が描画されたあとに発行されます。
              * @param {Ext.Component} this
              */
              'render',
             /**
              * @event afterrender
+						 * <p>コンポーネントの描画処理が終了したあとに発行されます。</p>
+						 * <p>このイベントはコンポーネントのrenderイベントが発行され、afterRenderメソッドが終了し、そして
+						 * {@link #stateful}状態である場合、状態復帰が完了した後に発行されます。</p>
              * <p>Fires after the component rendering is finished.</p>
-             * <p>The afterrender event is fired after this Component has been {@link #rendered}, been postprocesed
-             * by any afterRender method defined for the Component, and, if {@link #stateful}, after state
-             * has been restored.</p>
              * @param {Ext.Component} this
              */
              'afterrender',
             /**
              * @event beforedestroy
-             * Fires before the component is {@link #destroy}ed. Return false from an event handler to stop the {@link #destroy}.
+						 * コンポーネントが破壊される直前に発行されます。イベントリスナーがfalseを返すことでdestroyイベントを
+						 * 中止することができます。
              * @param {Ext.Component} this
              */
              'beforedestroy',
             /**
              * @event destroy
-             * Fires after the component is {@link #destroy}ed.
+						 * コンポーネントが破壊された後に発行されます。
              * @param {Ext.Component} this
              */
              'destroy',
             /**
              * @event resize
-             * Fires after the component is resized.
+						 * コンポーネントのサイズが変更された後に発行されます。
              * @param {Ext.Component} this
-             * @param {Number} adjWidth The box-adjusted width that was set
-             * @param {Number} adjHeight The box-adjusted height that was set
-             * @param {Number} rawWidth The width that was originally specified
-             * @param {Number} rawHeight The height that was originally specified
+             * @param {Number} adjWidth ボックスモデルにより修正された実際の幅
+             * @param {Number} adjHeight ボックスモデルにより修正された実際の高さ
+             * @param {Number} rawWidth 幅として元々指定された値
+             * @param {Number} rawHeight 高さとして元々指定された値
              */
              'resize',
             /**
              * @event move
-             * Fires after the component is moved.
+             * コンポーネントが移動した後に発行されます。
              * @param {Ext.Component} this
-             * @param {Number} x The new x position
-             * @param {Number} y The new y position
+             * @param {Number} x 新しいx座標
+             * @param {Number} y 新しいy座標
              */
              'move',
 
@@ -621,11 +621,11 @@ Ext.lib.Component = Ext.extend(Ext.util.Observable, {
     },
 
     /**
-     * This function takes the position argument passed to onRender and returns a
-     * DOM element that you can use in the insertBefore.
-     * @param {String/Number/Element/HTMLElement} position Index, element id or element you want
-     * to put this component before.
-     * @return {HTMLElement} DOM element that you can use in the insertBefore
+		 * このメソッドはonRenderメソッドに渡されるpositionを引数として受け取り、
+		 * insertBeforeメソッドで利用できるDOM要素を返します。
+     * @param {String/Number/Element/HTMLElement} position インデックス値、要素のid、あるいはこのコンポーネントを
+		 * その直前に挿入したい要素そのもの。
+     * @return {HTMLElement} DOM insertBeforeで利用できる要素
      */
     getInsertPosition: function(position) {
         // Convert the position to an element to insert before
@@ -803,8 +803,8 @@ Ext.lib.Component = Ext.extend(Ext.util.Observable, {
     },
 
     /**
-     * Retrieves the id of this component.
-     * Will autogenerate an id if one has not already been set.
+		 * コンポーネントのidを取得します。
+		 * コンポーネントにidが設定されていない場合は自動生成したidが設定されます。
      */
     getId : function() {
         return this.id || (this.id = 'ext-comp-' + (++Ext.lib.Component.AUTO_ID));
@@ -815,7 +815,7 @@ Ext.lib.Component = Ext.extend(Ext.util.Observable, {
     },
 
     /**
-     * Retrieves the top level element representing this component.
+		 * このコンポーネントのトップレベル要素を取得します。
      */
     getEl : function() {
         return this.el;
@@ -830,22 +830,21 @@ Ext.lib.Component = Ext.extend(Ext.util.Observable, {
     },
 
     /**
-     * <p>Tests whether or not this Component is of a specific xtype. This can test whether this Component is descended
-     * from the xtype (default) or whether it is directly of the xtype specified (shallow = true).</p>
-     * <p><b>If using your own subclasses, be aware that a Component must register its own xtype
-     * to participate in determination of inherited xtypes.</b></p>
-     * <p>For a list of all available xtypes, see the {@link Ext.Component} header.</p>
-     * <p>Example usage:</p>
+     * <p>このコンポーネントが指定したxtypeかどうかを確認します。このメソッドでは、コンポーネントが指定したxtypeを継承した
+		 * ものなのか（デフォルトの挙動）、指定したxtypeそのものなのか（shallow = true指定時）の確認ができます。</p>
+     * <p><b>独自に作成したクラスの継承関係を確認する場合は、そのクラスのxtypeが登録されている必要があります。</b></p>
+     * <p>定義済みのxtypeについては{@link Ext.Component}の説明文を参照してください。</p>
+     * <p>利用例：</p>
      * <pre><code>
 var t = new Ext.form.Text();
 var isText = t.isXType('textfield');        // true
-var isBoxSubclass = t.isXType('field');       // true, descended from Ext.form.Field
-var isBoxInstance = t.isXType('field', true); // false, not a direct Ext.form.Field instance
+var isBoxSubclass = t.isXType('field');       // true, Ext.form.Fieldクラスを継承
+var isBoxInstance = t.isXType('field', true); // false, Ext.form.Fieldのインスタンスではない 
 </code></pre>
-     * @param {String} xtype The xtype to check for this Component
-     * @param {Boolean} shallow (optional) False to check whether this Component is descended from the xtype (this is
-     * the default), or true to check whether this Component is directly of the specified xtype.
-     * @return {Boolean} True if this component descends from the specified xtype, false otherwise.
+     * @param {String} xtype 確認するxtype
+     * @param {Boolean} shallow (optional) 継承関係上の親クラスにもマッチさせる場合にはfalseと設定（デフォルト値）。trueと
+		 * 設定することで、コンポーネントがxtypeのインスタンスかどうかを確認。
+     * @return {Boolean} True xtypeにマッチした場合はtrue、しない場合はfalse
      */
     isXType: function(xtype, shallow) {
         //assume a string by default
@@ -861,16 +860,15 @@ var isBoxInstance = t.isXType('field', true); // false, not a direct Ext.form.Fi
     },
 
     /**
-     * <p>Returns this Component's xtype hierarchy as a slash-delimited string. For a list of all
-     * available xtypes, see the {@link Ext.Component} header.</p>
-     * <p><b>If using your own subclasses, be aware that a Component must register its own xtype
-     * to participate in determination of inherited xtypes.</b></p>
-     * <p>Example usage:</p>
+		 * <p>コンポーネントの継承関係上の全ての親クラスのxtypeを「/」で区切った文字列として返します。定義済みの
+		 * xtypeについては{@link Ext.Component}の説明文を参照してください。</p>
+		 * <p><b>独自に作成したサブクラスにこのメソッドを使う場合は、そのクラスのxtypeが登録されている必要があります。</b></p>
+     * <p>利用例：</p>
      * <pre><code>
 var t = new Ext.form.Text();
-alert(t.getXTypes());  // alerts 'component/field/textfield'
+alert(t.getXTypes());  // 'component/field/textfield'と出力
 </code></pre>
-     * @return {String} The xtype hierarchy string
+     * @return {String} xtypeの継承関係を表す文字列
      */
     getXTypes: function() {
         var constructor = this.constructor,
@@ -897,16 +895,15 @@ alert(t.getXTypes());  // alerts 'component/field/textfield'
     },
 
     /**
-     * Update the content area of a component.
+     * コンポーネントのコンテンツ領域を更新します。
      * @param {Mixed} htmlOrData
-     * If this component has been configured with a template via the tpl config
-     * then it will use this argument as data to populate the template.
-     * If this component was not configured with a template, the components
-     * content area will be updated via Ext.Element update
+		 * このコンポーネントにtplオプションが設定されている場合は、このメソッドは引数をtplに入力するdata
+		 * として扱います。テンプレートが設定されていない場合には、引数はコンテンツ領域（Ext.Element）の
+		 * updateメソッドに渡され処理されます。
      * @param {Boolean} loadScripts
-     * (optional) Only legitimate when using the html configuration. Defaults to false
+     * オプション。第一引数がhtmlの場合にのみ有効。デフォルト値はfalse。
      * @param {Function} callback
-     * (optional) Only legitimate when using the html configuration. Callback to execute when scripts have finished loading
+		 * オプション。第一引数がhtmlの場合にのみ有効。スクリプト完了時に呼び出されるコールバック関数
      */
     update : function(htmlOrData, loadScripts, cb) {
         if (this.tpl && !Ext.isString(htmlOrData)) {
@@ -928,8 +925,8 @@ alert(t.getXTypes());  // alerts 'component/field/textfield'
     },
 
     /**
-     * Convenience function to hide or show this component by boolean.
-     * @param {Boolean} visible True to show, false to hide
+		 * このコンポーネントの表示・非表示を設定
+     * @param {Boolean} visible 表示する場合はtrue、非表示にする場合はfalse
      * @return {Ext.Component} this
      */
     setVisible : function(visible) {
@@ -937,8 +934,8 @@ alert(t.getXTypes());  // alerts 'component/field/textfield'
     },
 
     /**
-     * Returns true if this component is visible.
-     * @return {Boolean} True if this component is visible, false otherwise.
+		 * このコンポーネントが表示されている場合にtrueを返します
+     * @return {Boolean} コンポーネントが表示されてい場合はtrue、非表示の場合はfalse
      */
     isVisible: function() {
         var visible = !this.hidden,
@@ -965,9 +962,9 @@ alert(t.getXTypes());  // alerts 'component/field/textfield'
     },
 
     /**
-     * Enable the component
+		 * コンポーネントを利用可能にします。
      * @param {Boolean} silent
-     * Passing false will supress the 'enable' event from being fired.
+		 * falseを渡すことでenableイベントを発行しないようにします。
      */
     enable : function(silent) {
         if (this.rendered) {
@@ -986,9 +983,9 @@ alert(t.getXTypes());  // alerts 'component/field/textfield'
     },
 
     /**
-     * Disable the component.
+     * コンポーネントを利用不可にします。
      * @param {Boolean} silent
-     * Passing true, will supress the 'disable' event from being fired.
+		 * falseを渡すことでdisableイベントを発行しないようにします。
      */
     disable : function(silent) {
         if (this.rendered) {
@@ -1007,15 +1004,15 @@ alert(t.getXTypes());  // alerts 'component/field/textfield'
     },
 
     /**
-     * Method to determine whether this Component is currently disabled.
-     * @return {Boolean} the disabled state of this Component.
+		 * このコンポーネントが現在利用不可かどうかを判定します。
+     * @return {Boolean} コンポーネントが利用不可の場合はtrue、そうじゃない場合はfalse
      */
     isDisabled : function() {
         return this.disabled;
     },
     
     /**
-     * Enable or disable the component.
+		 * このコンポーネントの利用可・不可を設定します。
      * @param {Boolean} disabled
      */
     setDisabled : function(disabled) {
@@ -1023,16 +1020,16 @@ alert(t.getXTypes());  // alerts 'component/field/textfield'
     },
 
     /**
-     * Method to determine whether this Component is currently set to hidden.
-     * @return {Boolean} the hidden state of this Component.
+		 * このコンポーネントが現在非表示かどうかを判定します。
+     * @return {Boolean} コンポーネントが非表示の場合はtrue、そうじゃない場合はfalse
      */
     isHidden : function() {
         return this.hidden;
     },
     
     /**
-     * Adds a CSS class to the top level element representing this component.
-     * @returns {Ext.Component} Returns the Component to allow method chaining.
+		 * このコンポーネントのトップレベル要素にCSSクラスを付加します。
+     * @returns {Ext.Component} コンポーネント自身を返します。
      */
     addCls : function() {
         var me = this,
@@ -1053,8 +1050,8 @@ alert(t.getXTypes());  // alerts 'component/field/textfield'
     //</debug>
     
     /**
-     * Removes a CSS class from the top level element representing this component.
-     * @returns {Ext.Component} Returns the Component to allow method chaining.
+		 * このコンポーネントのトップレベル要素からCSSクラスを削除します。
+     * @returns {Ext.Component} コンポーネント自身を返します。
      */
     removeCls : function() {
         var me = this,
@@ -1116,32 +1113,32 @@ alert(t.getXTypes());  // alerts 'component/field/textfield'
     // @TODO: implement removelistener to support the dom event stuff
 
     /**
-     * Provides the link for Observable's fireEvent method to bubble up the ownership hierarchy.
-     * @return {Ext.Container} the Container which owns this Component.
+		 * fireEventで発行されたイベントがバブルアップするためのターゲットを取得します。
+     * @return {Ext.Container} このコンポーネントを保持するコンテナを返します。
      */
     getBubbleTarget : function() {
         return this.ownerCt;
     },
 
     /**
-     * Method to determine whether this Component is floating.
-     * @return {Boolean} the floating state of this component.
+		 * このコンポーネントがフロート状態かどうかを判定します。
+     * @return {Boolean} このコンポーネントがフローと状態の場合はtrue、そうじゃない場合はfalse
      */
     isFloating : function() {
         return this.floating;
     },
 
     /**
-     * Method to determine whether this Component is draggable.
-     * @return {Boolean} the draggable state of this component.
+		 * このコンポーネントがドラッグ可能かどうかを判定します。
+     * @return {Boolean} このコンポーネントがドラッグ可能であればtrue、そうじゃない場合はfalse
      */    
     isDraggable : function() {
         return !!this.draggable;
     },
     
     /**
-     * Method to determine whether this Component is droppable.
-     * @return {Boolean} the droppable state of this component.
+		 * このコンポーネントがドロップ可能かどうかを判定します。
+     * @return {Boolean} このコンポーネントがドロップ可能であればtrue、そうじゃない場合はfalse
      */
     isDroppable : function() {
         return !!this.droppable;
@@ -1182,19 +1179,20 @@ alert(t.getXTypes());  // alerts 'component/field/textfield'
     onResize : Ext.emptyFn,
 
     /**
-     * Sets the width and height of this Component. This method fires the {@link #resize} event. This method can accept
-     * either width and height as separate arguments, or you can pass a size object like <code>{width:10, height:20}</code>.
-     * @param {Mixed} width The new width to set. This may be one of:<div class="mdetail-params"><ul>
-     * <li>A Number specifying the new width in the {@link #getEl Element}'s {@link Ext.Element#defaultUnit}s (by default, pixels).</li>
-     * <li>A String used to set the CSS width style.</li>
-     * <li>A size object in the format <code>{width: widthValue, height: heightValue}</code>.</li>
-     * <li><code>undefined</code> to leave the width unchanged.</li>
+		 * コンポーネントの幅と高さを設定します。このメソッドは{@link #resize}を発行します。このメソッドは幅と高さ別々の
+		 * 引数として取ることもできますし、サイズを表すオブジェクト（例：<code>{width:10, height:20}</code>）を取ることも
+		 * できます。
+     * @param {Mixed} width 新しく設定する幅の値。この値には下記のいずれかが指定できます：<div class="mdetail-params"><ul>
+     * <li>このコンポーネントの{@link #getEl トップレベル要素}の{@link Ext.Element#defaultUnit}メソッド指定された単位の数値（デフォルトはピクセル）。</li>
+     * <li>CSSでwidthを設定する際に利用可能な文字列</li>
+     * <li>サイズオブジェクト（フォーマットは次の通り：<code>{width: widthValue, height: heightValue}</code>）</li>
+     * <li>幅を変更しない場合は<code>undefined</code></li>
      * </ul></div>
-     * @param {Mixed} height The new height to set (not required if a size object is passed as the first arg).
-     * This may be one of:<div class="mdetail-params"><ul>
-     * <li>A Number specifying the new height in the {@link #getEl Element}'s {@link Ext.Element#defaultUnit}s (by default, pixels).</li>
-     * <li>A String used to set the CSS height style. Animation may <b>not</b> be used.</li>
-     * <li><code>undefined</code> to leave the height unchanged.</li>
+     * @param {Mixed} height 新しく設定する高さの値（第一引数がサイズオブジェクトの場合は省略可能）
+     * この値には下記のいずれかが指定できます：<div class="mdetail-params"><ul>
+     * <li>このコンポーネントの{@link #getEl トップレベル要素}の{@link Ext.Element#defaultUnit}メソッド指定された単位の数値（デフォルトはピクセル）。</li>
+     * <li>CSSでheightを設定する際に利用可能な文字列</li>
+     * <li>高さを変更しない場合は<code>undefined</code></li>
      * </ul></div>
      * @return {Ext.Component} this
      */
@@ -1253,10 +1251,10 @@ alert(t.getXTypes());  // alerts 'component/field/textfield'
     },
 
     /**
-     * This method needs to be called whenever you change something on this component that requires the components
-     * layout to be recalculated. An example is adding, showing or hiding a docked item to a Panel, or changing the
-     * label of a form field. After a component layout, the container layout will automatically be run. So you could
-     * be on the safe side and always call doComponentLayout instead of doLayout.
+		 * このコンポーネント内のレイアウトを再計算する必要がある操作を行った場合には必ずこのメソッドを呼び出してください。
+		 * 例えば、PanelのdockedItemを表示・非表示・追加したり、フォームフィールドのラベルを変更したような場合です。
+		 * コンポーネントがレイアウトされた後に、コンテナのレイアウトは自動的に行われます。従って、レイアウトに影響を
+		 * 与えるような操作の後にはdoLayoutではなくdoComponentLayoutを呼び出した方が大抵の場合安全です。
      * @return {Ext.Container} this
      */
     doComponentLayout : function(width, height, isSetSize) {
@@ -1294,10 +1292,10 @@ alert(t.getXTypes());  // alerts 'component/field/textfield'
     afterComponentLayout: Ext.emptyFn,
 
     /**
-     * Sets the left and top of the component.  To set the page XY position instead, use {@link #setPagePosition}.
-     * This method fires the {@link #move} event.
-     * @param {Number} left The new left
-     * @param {Number} top The new top
+		 * コンポーネントのleftとtopの値を設定します。ページ内での座標を設定したい場合は{@link #setPagePosition}メソッド
+		 * を使ってください。このメソッドは{@link #move}イベントを発行します。
+     * @param {Number} left 新しく設定するleftの値
+     * @param {Number} top 新しく設定するtopの値
      * @return {Ext.Component} this
      */
     setPosition : function(x, y) {
@@ -1328,10 +1326,10 @@ alert(t.getXTypes());  // alerts 'component/field/textfield'
     onPosition: Ext.emptyFn,
 
     /**
-     * Sets the width of the component.  This method fires the {@link #resize} event.
-     * @param {Number} width The new width to setThis may be one of:<div class="mdetail-params"><ul>
-     * <li>A Number specifying the new width in the {@link #getEl Element}'s {@link Ext.Element#defaultUnit}s (by default, pixels).</li>
-     * <li>A String used to set the CSS width style.</li>
+		 * コンポーネントの幅を設定します。このメソッドは{@link #resize}イベント発行します。
+     * @param {Number} width コンポーネントの幅として設定する値。この引数は以下のいずれかが指定できます：<div class="mdetail-params"><ul>
+    * <li>このコンポーネントの{@link #getEl トップレベル要素}の{@link Ext.Element#defaultUnit}メソッド指定された単位の数値（デフォルトはピクセル）。</li>
+     * <li>CSSでwidthを設定する際に利用可能な文字列</li>
      * </ul></div>
      * @return {Ext.Component} this
      */
@@ -1340,11 +1338,10 @@ alert(t.getXTypes());  // alerts 'component/field/textfield'
     },
 
     /**
-     * Sets the height of the component.  This method fires the {@link #resize} event.
-     * @param {Number} height The new height to set. This may be one of:<div class="mdetail-params"><ul>
-     * <li>A Number specifying the new height in the {@link #getEl Element}'s {@link Ext.Element#defaultUnit}s (by default, pixels).</li>
-     * <li>A String used to set the CSS height style.</li>
-     * <li><i>undefined</i> to leave the height unchanged.</li>
+		 * コンポーネントの高さを設定します。このメソッドは{@link #resize}イベント発行します。
+     * @param {Number} height コンポーネントの高さとして設定する値。この引数は以下のいずれかが指定できます：<div class="mdetail-params"><ul>
+    * <li>このコンポーネントの{@link #getEl トップレベル要素}の{@link Ext.Element#defaultUnit}メソッド指定された単位の数値（デフォルトはピクセル）。</li>
+     * <li>CSSでheightを設定する際に利用可能な文字列</li>
      * </ul></div>
      * @return {Ext.Component} this
      */
@@ -1353,15 +1350,15 @@ alert(t.getXTypes());  // alerts 'component/field/textfield'
     },
 
     /**
-     * Gets the current size of the component's underlying element.
-     * @return {Object} An object containing the element's size {width: (element width), height: (element height)}
+		 * コンポーネントのトップレベル要素のサイズを取得します。
+     * @return {Object} コンポーネントのサイズを表すオブジェクト（{width: (要素の幅), height: (要素の高さ)}）
      */
     getSize : function() {
         return this.el.getSize();
     },
 
     /**
-     * Gets the current width of the component's underlying element.
+		 * コンポーネントのトップレベル要素の幅を取得します。
      * @return {Number}
      */
     getWidth : function() {
@@ -1369,7 +1366,7 @@ alert(t.getXTypes());  // alerts 'component/field/textfield'
     },
 
     /**
-     * Gets the current height of the component's underlying element.
+		 * コンポーネントのトップレベル要素の高さを取得します。
      * @return {Number}
      */
     getHeight : function() {
@@ -1377,12 +1374,12 @@ alert(t.getXTypes());  // alerts 'component/field/textfield'
     },
 
     /**
-     * This method allows you to show or hide a LoadMask on top of this component.
-     * @param {Boolean/Object} load True to show the default LoadMask or a config object
-     * that will be passed to the LoadMask constructor. False to hide the current LoadMask.
-     * @param {Boolean} targetEl True to mask the targetEl of this Component instead of the this.el.
-     * For example, setting this to true on a Panel will cause only the body to be masked. (defaults to false)
-     * @return {Ext.LoadMask} The LoadMask instance that has just been shown.
+		 * このコンポーネントに重なるようにLoadMaskwo表示します。
+     * @param {Boolean/Object} load trueを渡すことでデフォルトのLoadMaskを表示。LoadMaskを生成するためのコンフィグ
+		 * オプションを指定することも可能です。falseを渡すことでLoadMaskを消します。
+     * @param {Boolean} targetEl trueを渡すことで、このコンポーネントのトップレベル要素（this.el）ではなく、targetElを
+		 * マスクします。例えば、この引数をtrueにした場合、Panelではbody部分のみがマスクされます（デフォルト値はfalse）。
+     * @return {Ext.LoadMask} 表示されたLoadMaskのインスタンを返します。
      */    
     setLoading : function(load, targetEl) {
         if (this.rendered) {
@@ -1400,10 +1397,9 @@ alert(t.getXTypes());  // alerts 'component/field/textfield'
     },
 
     /**
-     * Sets the dock position of this component in its parent panel. Note that
-     * this only has effect if this item is part of the dockedItems collection
-     * of a parent that has a DockLayout (note that any Panel has a DockLayout
-     * by default)
+		 * このコンポーネントのドック位置を設定します。このメソッドは、このコンポーネントが
+		 * DockLayoutを持つコンポーネントのdockedItemsの中にある場合にのみ有効となります（
+		 * PanelとそのサブクラスはDockLayoutを持っています）。
      * @return {Component} this
      */
     setDocked : function(dock, layoutParent) {
@@ -1422,7 +1418,7 @@ alert(t.getXTypes());  // alerts 'component/field/textfield'
     },
 
     /**
-     * Destroys the Component.
+		 * コンポーネント破壊します。
      */
     destroy : function() {
         if (!this.isDestroyed) {
