@@ -89,7 +89,8 @@ Ext.form.Select = Ext.extend(Ext.form.Text, {
             'change'
         );
     },
-    
+
+    // @private
     onRender: function(){
         Ext.form.Select.superclass.onRender.apply(this, arguments);
         
@@ -103,6 +104,7 @@ Ext.form.Select = Ext.extend(Ext.form.Text, {
         }    
     },
 
+    // @private
     getPicker: function() {
         if (!this.picker) {
             this.picker = new Ext.Picker({
@@ -124,11 +126,12 @@ Ext.form.Select = Ext.extend(Ext.form.Text, {
         return this.picker;
     },
 
+    // @private
     getListPanel: function() {
         if (!this.listPanel) {
             this.listPanel = new Ext.Panel({
                 floating         : true,
-                stopMaskTapEvent : true,
+                stopMaskTapEvent : false,
                 hideOnMaskTap    : true,
                 cls              : 'x-select-overlay',
                 scroll           : 'vertical',
@@ -144,7 +147,7 @@ Ext.form.Select = Ext.extend(Ext.form.Text, {
                     listeners: {
                         select : this.onListSelect,
                         scope  : this
-                    }                    
+                    }
                 }
             });
         }
@@ -152,6 +155,7 @@ Ext.form.Select = Ext.extend(Ext.form.Text, {
         return this.listPanel;
     },
 
+    // @private
     onMaskTap: function() {
         if (this.disabled) {
             return;
@@ -160,6 +164,7 @@ Ext.form.Select = Ext.extend(Ext.form.Text, {
         this.showComponent();
     },
 
+    // @private
     showComponent: function() {
         if (Ext.is.Phone) {
             this.getPicker().show();
@@ -173,6 +178,7 @@ Ext.form.Select = Ext.extend(Ext.form.Text, {
         }
     },
 
+    // @private
     onListSelect: function(selModel, selected) {
         if (selected) {
             this.setValue(selected.get(this.valueField));
@@ -186,6 +192,7 @@ Ext.form.Select = Ext.extend(Ext.form.Text, {
         });
     },
 
+    // @private
     onPickerChange: function(picker, value) {
         var currentValue = this.getValue(),
             newValue = value[this.name];
@@ -214,6 +221,9 @@ Ext.form.Select = Ext.extend(Ext.form.Text, {
                 hiddenField.dom.value = this.value;
             }
         } else {
+            if (this.rendered) {
+                this.fieldEl.dom.value = value;
+            }
             this.value = value;
         }
 

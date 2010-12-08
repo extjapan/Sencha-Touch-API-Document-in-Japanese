@@ -3,11 +3,100 @@
  * @class Ext.data.Field
  * @extends Object
  * 
- * <p>This class encapsulates the field definition information specified in the field definition objects
- * passed to {@link Ext.regModel}.</p>
+ * <p>Fields are used to define what a Model is. They aren't instantiated directly - instead, {@link Ext#regModel} 
+ * creates a Field instance for each field configured in a {@link Ext.data.Model Model}. For example, we might set up a
+ * model like this:</p>
  * 
- * <p>Developers do not need to instantiate this class. Instances are created by {@link Ext.regModel}
- * and cached in the {@link Ext.data.Model#fields fields} property of the created Model constructor's <b>prototype.</b></p>
+<pre><code>
+Ext.regModel('User', {
+    fields: [
+        'name', 'email',
+        {name: 'age', type: 'int'},
+        {name: 'gender', type: 'string', defaultValue: 'Unknown'}
+    ]
+});
+</code></pre>
+ * 
+ * <p>Four fields will have been created for the User Model - name, email, age and gender. Note that we specified a
+ * couple of different formats here; if we only pass in the string name of the field (as with name and email), the
+ * field is set up with the 'auto' type. It's as if we'd done this instead:</p>
+ * 
+<pre><code>
+Ext.regModel('User', {
+    fields: [
+        {name: 'name', type: 'auto'},
+        {name: 'email', type: 'auto'},
+        {name: 'age', type: 'int'},
+        {name: 'gender', type: 'string', defaultValue: 'Unknown'}
+    ]
+});
+</code></pre>
+ * 
+ * <p><u>Types and conversion</u></p>
+ * 
+ * <p>The {@link #type} is important - it's used to automatically convert data passed to the field into the correct
+ * format. In our example above, the name and email fields used the 'auto' type and will just accept anything that is
+ * passed into them. The 'age' field had an 'int' type however, so if we passed 25.4 this would be rounded to 25.</p>
+ * 
+ * <p>Sometimes a simple type isn't enough, or we want to perform some processing when we load a Field's data. We can
+ * do this using a {@link #convert} function. Here, we're going to create a new field based on another:</p>
+ * 
+<code><pre>
+Ext.regModel('User', {
+    fields: [
+        'name', 'email',
+        {name: 'age', type: 'int'},
+        {name: 'gender', type: 'string', defaultValue: 'Unknown'},
+
+        {
+            name: 'firstName',
+            convert: function(value, record) {
+                var fullName  = record.get('name'),
+                    splits    = fullName.split(" "),
+                    firstName = splits[0];
+
+                return firstName;
+            }
+        }
+    ]
+});
+</code></pre>
+ * 
+ * <p>Now when we create a new User, the firstName is populated automatically based on the name:</p>
+ * 
+<code><pre>
+var ed = Ext.ModelMgr.create({name: 'Ed Spencer'}, 'User');
+
+console.log(ed.get('firstName')); //logs 'Ed', based on our convert function
+</code></pre>
+ * 
+ * <p>In fact, if we log out all of the data inside ed, we'll see this:</p>
+ * 
+<code><pre>
+console.log(ed.data);
+
+//outputs this:
+{
+    age: 0,
+    email: "",
+    firstName: "Ed",
+    gender: "Unknown",
+    name: "Ed Spencer"
+}
+</code></pre>
+ * 
+ * <p>The age field has been given a default of zero because we made it an int type. As an auto field, email has
+ * defaulted to an empty string. When we registered the User model we set gender's {@link #defaultValue} to 'Unknown'
+ * so we see that now. Let's correct that and satisfy ourselves that the types work as we expect:</p>
+ * 
+<code><pre>
+ed.set('gender', 'Male');
+ed.get('gender'); //returns 'Male'
+
+ed.set('age', 25.4);
+ed.get('age'); //returns 25 - we wanted an int, not a float, so no decimal places allowed
+</code></pre>
+ * 
  */
 Ext.data.Field = Ext.extend(Object, {
     
@@ -43,11 +132,12 @@ Ext.data.Field = Ext.extend(Object, {
     
     /**
      * @cfg {String} name
-     * The name by which the field is referenced within the Record. This is referenced by, for example,
+     * The name by which the field is referenced within the Model. This is referenced by, for example,
      * the <code>dataIndex</code> property in column definition objects passed to {@link Ext.grid.ColumnModel}.
      * <p>Note: In the simplest case, if no properties other than <code>name</code> are required, a field
      * definition may consist of just a String for the field name.</p>
      */
+    
     /**
      * @cfg {Mixed} type
      * (Optional) The data type for automatic conversion from received data to the <i>stored</i> value if <code>{@link Ext.data.Field#convert convert}</code>
@@ -63,15 +153,16 @@ Ext.data.Field = Ext.extend(Object, {
      * <p>Developers may create their own application-specific data types by defining new members of the
      * {@link Ext.data.Types} class.</p>
      */
+    
     /**
      * @cfg {Function} convert
      * (Optional) A function which converts the value provided by the Reader into an object that will be stored
-     * in the Record. It is passed the following parameters:<div class="mdetail-params"><ul>
+     * in the Model. It is passed the following parameters:<div class="mdetail-params"><ul>
      * <li><b>v</b> : Mixed<div class="sub-desc">The data value as read by the Reader, if undefined will use
      * the configured <code>{@link Ext.data.Field#defaultValue defaultValue}</code>.</div></li>
-     * <li><b>rec</b> : Mixed<div class="sub-desc">The data object containing the row as read by the Reader.
-     * Depending on the Reader type, this could be an Array ({@link Ext.data.ArrayReader ArrayReader}), an object
-     *  ({@link Ext.data.JsonReader JsonReader}), or an XML element ({@link Ext.data.XMLReader XMLReader}).</div></li>
+     * <li><b>rec</b> : Ext.data.Model<div class="sub-desc">The data object containing the Model as read so far by the 
+     * Reader. Note that the Model may not be fully populated at this point as the fields are read in the order that 
+     * they are defined in your {@link #fields} array.</div></li>
      * </ul></div>
      * <pre><code>
 // example of convert function
@@ -83,25 +174,26 @@ function location(v, record){
     return !record.city ? '' : (record.city + ', ' + record.state);
 }
 
-var Dude = Ext.data.Record.create([
-    {name: 'fullname',  convert: fullName},
-    {name: 'firstname', mapping: 'name.first'},
-    {name: 'lastname',  mapping: 'name.last'},
-    {name: 'city', defaultValue: 'homeless'},
-    'state',
-    {name: 'location',  convert: location}
-]);
+var Dude = Ext.regModel({
+    fields: [
+        {name: 'fullname',  convert: fullName},
+        {name: 'firstname', mapping: 'name.first'},
+        {name: 'lastname',  mapping: 'name.last'},
+        {name: 'city', defaultValue: 'homeless'},
+        'state',
+        {name: 'location',  convert: location}
+    ]
+});
 
 // create the data store
 var store = new Ext.data.Store({
-    reader: new Ext.data.JsonReader(
-        {
-            idProperty: 'key',
-            root: 'daRoot',
-            totalProperty: 'total'
-        },
-        Dude  // recordType
-    )
+    reader: {
+        type: 'json',
+        model: 'Dude',
+        idProperty: 'key',
+        root: 'daRoot',
+        totalProperty: 'total'
+    }
 });
 
 var myData = [
@@ -138,7 +230,7 @@ var myData = [
     
     /**
      * @cfg {Mixed} defaultValue
-     * (Optional) The default value used <b>when a Record is being created by a {@link Ext.data.Reader Reader}</b>
+     * (Optional) The default value used <b>when a Model is being created by a {@link Ext.data.Reader Reader}</b>
      * when the item referenced by the <code>{@link Ext.data.Field#mapping mapping}</code> does not exist in the data
      * object (i.e. undefined). (defaults to "")
      */
@@ -146,7 +238,7 @@ var myData = [
     /**
      * @cfg {String/Number} mapping
      * <p>(Optional) A path expression for use by the {@link Ext.data.DataReader} implementation
-     * that is creating the {@link Ext.data.Record Record} to extract the Field value from the data object.
+     * that is creating the {@link Ext.data.Model Model} to extract the Field value from the data object.
      * If the path expression is the same as the field name, the mapping may be omitted.</p>
      * <p>The form of the mapping expression depends on the Reader being used.</p>
      * <div class="mdetail-params"><ul>
@@ -193,8 +285,9 @@ sortType: function(value) {
     sortDir : "ASC",
     /**
      * @cfg {Boolean} allowBlank
-     * (Optional) Used for validating a {@link Ext.data.Record record}, defaults to <code>true</code>.
-     * An empty value here will cause {@link Ext.data.Record}.{@link Ext.data.Record#isValid isValid}
+     * @private
+     * (Optional) Used for validating a {@link Ext.data.Model model}, defaults to <code>true</code>.
+     * An empty value here will cause {@link Ext.data.Model}.{@link Ext.data.Model#isValid isValid}
      * to evaluate to <code>false</code>.
      */
     allowBlank : true

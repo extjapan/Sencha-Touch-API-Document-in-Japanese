@@ -5,7 +5,7 @@
  * @xtype searchfield
  */
 Ext.form.Search = Ext.extend(Ext.form.Text, {
-    inputType: Ext.is.Android ? 'text' : 'search'
+    inputType: 'search'
     /**
      * @cfg {Boolean} useClearIcon @hide
      */

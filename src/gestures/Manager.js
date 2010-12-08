@@ -1,28 +1,93 @@
 Ext.gesture.Manager = new Ext.AbstractManager({
-    startEventName: 'touchstart',
-    moveEventName: 'touchmove',
-    endEventName: 'touchend',
+    eventNames: {
+        start: 'touchstart',
+        move: 'touchmove',
+        end: 'touchend'
+    },
+
+    defaultPreventedMouseEvents: ['click'],
+
+    clickMoveThreshold: 5,
     
     init: function() {
         this.targets = []; 
-
-        if (!Ext.supports.Touch) {
-            Ext.apply(this, {
-                startEventName: 'mousedown',
-                moveEventName: 'mousemove',
-                endEventName: 'mouseup'
-            });
-        }
         
         this.followTouches = [];
         this.currentGestures = [];
         this.currentTargets = [];
+
+        if (!Ext.supports.Touch) {
+            Ext.apply(this.eventNames, {
+                start: 'mousedown',
+                move: 'mousemove',
+                end: 'mouseup'
+            });
+        }
         
-        document.addEventListener(this.startEventName, Ext.createDelegate(this.onTouchStart, this), true);
-        document.addEventListener(this.endEventName, Ext.createDelegate(this.onTouchEnd, this), true);
+        this.listenerWrappers = {
+            start: Ext.createDelegate(this.onTouchStart, this),
+            move: Ext.createDelegate(this.onTouchMove, this),
+            end: Ext.createDelegate(this.onTouchEnd, this),
+            mouse: Ext.createDelegate(this.onMouseEvent, this)
+        };
+
+        this.attachListeners();
+    },
+
+    getEventSimulator: function() {
+        if (!this.eventSimulator) {
+            this.eventSimulator = new Ext.util.EventSimulator();
+        }
+
+        return this.eventSimulator;
+    },
+
+    attachListeners: function() {
+        Ext.iterate(this.eventNames, function(key, name) {
+            document.body.addEventListener(name, this.listenerWrappers[key], false);
+        }, this);
+
+        if (Ext.supports.Touch) {
+            this.defaultPreventedMouseEvents.forEach(function(name) {
+                document.body.addEventListener(name, this.listenerWrappers['mouse'], true);
+            }, this);
+        }
+    },
+
+    detachListeners: function() {
+        Ext.iterate(this.eventNames, function(key, name) {
+            document.body.removeEventListener(name, this.listenerWrappers[key], false);
+        }, this);
+
+        if (Ext.supports.Touch) {
+            this.defaultPreventedMouseEvents.forEach(function(name) {
+                document.body.removeEventListener(name, this.listenerWrappers['mouse'], true);
+            }, this);
+        }
+    },
+
+    onMouseEvent: function(e) {
+        if (!e.isSimulated) {
+            e.preventDefault();
+            e.stopPropagation();
+        }
     },
 
     onTouchStart: function(e) {
+        var targets = [],
+            target = e.target,
+            me = this;
+
+        if (e.stopped === true) {
+            return;
+        }
+
+        if (!Ext.is.iOS) {
+            if (!(target.tagName && ['input', 'textarea', 'select'].indexOf(target.tagName.toLowerCase()) !== -1)) {
+                e.preventDefault();
+            }
+        }
+        
         // There's already a touchstart without any touchend!
         // This used to happen on HTC Desire and HTC Incredible
         // We have to clean it up
@@ -30,15 +95,12 @@ Ext.gesture.Manager = new Ext.AbstractManager({
             this.onTouchEnd(e);
         }
 
-        var targets = [],
-            target = e.target;
-        
         this.locks = {};
         
         this.currentTargets = [target];
         
         while (target) {
-            if (this.targets.indexOf(target) != -1) {
+            if (this.targets.indexOf(target) !== -1) {
                 targets.unshift(target);
             }
             
@@ -48,42 +110,73 @@ Ext.gesture.Manager = new Ext.AbstractManager({
         
         this.startEvent = e;
         this.startPoint = Ext.util.Point.fromEvent(e);
+        this.lastMovePoint = null;
+        this.isClick = true;
         this.handleTargets(targets, e);
     },
-    
+
+    onTouchMove: function(e) {
+        if (!this.startEvent) {
+            return;
+        }
+
+        if (Ext.is.Desktop) {
+            e.target = this.startEvent.target;
+        }
+
+        if (Ext.is.iOS) {
+            e.preventDefault();
+        }
+
+        var gestures = this.currentGestures,
+            gesture,
+            touch = e.changedTouches ? e.changedTouches[0] : e;
+
+        this.lastMovePoint = Ext.util.Point.fromEvent(e);
+
+        if (Ext.supports.Touch && this.isClick && !this.lastMovePoint.isWithin(this.startPoint, this.clickMoveThreshold)) {
+            this.isClick = false;
+        }
+
+        for (var i = 0; i < gestures.length; i++) {
+            if (e.stopped) {
+                break;
+            }
+
+            gesture = gestures[i];
+
+            if (gesture.listenForMove) {
+                gesture.onTouchMove(e, touch);
+            }
+        }
+    },
+
     /**
      * This listener is here to always ensure we stop all current gestures
      * @private
-     */    
+     */
     onTouchEnd: function(e) {
         var gestures = this.currentGestures.slice(0),
             ln = gestures.length,
             i, gesture, endPoint,
-            hasMoved = false,
+            needsAnotherMove = false,
             touch = e.changedTouches ? e.changedTouches[0] : e;
 
         if (this.startPoint) {
             endPoint = Ext.util.Point.fromEvent(e);
-
-            // The point has changed, we should execute another onTouchMove before onTouchEnd
-            // to deal with the problem of missing events on Androids and alike
-            // This significantly improves scrolling experience on Androids! Yeah!
-            if (!this.startPoint.equals(endPoint)) {
-                hasMoved = true;
+            if (!(this.lastMovePoint || this.startPoint)['equals'](endPoint)) {
+                needsAnotherMove = true;
             }
         }
-        
-        this.followTouches = [];
-        this.startedChangedTouch = false;
-        this.currentTargets = [];
-        this.startEvent = null;
-        this.startPoint = null;
-        
+
         for (i = 0; i < ln; i++) {
             gesture = gestures[i];
 
             if (!e.stopped && gesture.listenForEnd) {
-                if (hasMoved) {
+                // The point has changed, we should execute another onTouchMove before onTouchEnd
+                // to deal with the problem of missing events on Androids and alike
+                // This significantly improves scrolling experience on Androids!
+                if (needsAnotherMove) {
                     gesture.onTouchMove(e, touch);
                 }
 
@@ -92,40 +185,27 @@ Ext.gesture.Manager = new Ext.AbstractManager({
 
             this.stopGesture(gesture);
         }
-    },
 
-    startGesture: function(gesture) {
-        var me = this;
 
-        gesture.started = true;
-        
-        if (gesture.listenForMove) {
-            gesture.onTouchMoveWrap = function(e) {
-                if (!e.stopped) {
-                    gesture.onTouchMove(e, e.changedTouches ? e.changedTouches[0] : e);
-                }
-            };
-            
-            gesture.target.addEventListener(me.moveEventName, gesture.onTouchMoveWrap, !!gesture.capture);
+        if (Ext.supports.Touch && this.isClick) {
+            this.isClick = false;
+            this.getEventSimulator().fire('click', this.startEvent.target, touch);
         }
-        
-        this.currentGestures.push(gesture);
+
+        this.lastMovePoint = null;
+        this.followTouches = [];
+        this.startedChangedTouch = false;
+        this.currentTargets = [];
+        this.startEvent = null;
+        this.startPoint = null;
     },
 
-    stopGesture: function(gesture) {
-        gesture.started = false;
-        if (gesture.listenForMove) {
-            gesture.target.removeEventListener(this.moveEventName, gesture.onTouchMoveWrap, !!gesture.capture);
-        }
-        this.currentGestures.remove(gesture);
-    },
-    
     handleTargets: function(targets, e) {
         // In handle targets we have to first handle all the capture targets,
         // then all the bubble targets.
         var ln = targets.length,
-            i, target;
-        
+            i;
+
         this.startedChangedTouch = false;
         this.startedTouches = Ext.supports.Touch ? e.touches : [e];
 
@@ -133,23 +213,23 @@ Ext.gesture.Manager = new Ext.AbstractManager({
             if (e.stopped) {
                 break;
             }
-            target = targets[i];
-            this.handleTarget(target, e, true);
+            
+            this.handleTarget(targets[i], e, true);
         }
-        
+
         for (i = ln - 1; i >= 0; i--) {
             if (e.stopped) {
                 break;
             }
-            target = targets[i];
-            this.handleTarget(target, e, false);
+            
+            this.handleTarget(targets[i], e, false);
         }
-        
+
         if (this.startedChangedTouch) {
             this.followTouches = this.followTouches.concat((Ext.supports.Touch && e.targetTouches) ? Ext.toArray(e.targetTouches) : [e]);
         }
     },
-    
+
     handleTarget: function(target, e, capture) {
         var gestures = Ext.Element.data(target, 'x-gestures') || [],
             ln = gestures.length,
@@ -159,7 +239,7 @@ Ext.gesture.Manager = new Ext.AbstractManager({
             gesture = gestures[i];
             if (
                 (!!gesture.capture === !!capture) &&
-                (this.followTouches.length < gesture.touches) && 
+                (this.followTouches.length < gesture.touches) &&
                 ((Ext.supports.Touch && e.targetTouches) ? (e.targetTouches.length === gesture.touches) : true)
             ) {
                 this.startedChangedTouch = true;
@@ -168,21 +248,36 @@ Ext.gesture.Manager = new Ext.AbstractManager({
                 if (gesture.listenForStart) {
                     gesture.onTouchStart(e, e.changedTouches ? e.changedTouches[0] : e);
                 }
-                                
+
                 if (e.stopped) {
                     break;
-                }                
+                }
             }
         }
     },
-        
+
+    startGesture: function(gesture) {
+        gesture.started = true;
+        this.currentGestures.push(gesture);
+    },
+
+    stopGesture: function(gesture) {
+        gesture.started = false;
+        this.currentGestures.remove(gesture);
+    },
+
     addEventListener: function(target, eventName, listener, options) {
         target = Ext.getDom(target);
 
         var targets = this.targets,
             name = this.getGestureName(eventName),
-            gestures = Ext.Element.data(target, 'x-gestures') || [],
+            gestures = Ext.Element.data(target, 'x-gestures'),
             gesture;
+
+        if (!gestures) {
+            gestures = [];
+            Ext.Element.data(target, 'x-gestures', gestures);
+        }
         
         // <debug>
         if (!name) {
@@ -190,7 +285,7 @@ Ext.gesture.Manager = new Ext.AbstractManager({
         }
         // </debug>
         
-        if (targets.indexOf(target) == -1) {
+        if (targets.indexOf(target) === -1) {
             this.targets.push(target);
         }
         
@@ -203,13 +298,14 @@ Ext.gesture.Manager = new Ext.AbstractManager({
             }));
 
             gestures.push(gesture);
-
-            Ext.Element.data(target, 'x-gestures', gestures);
+            // The line below is not needed, Ext.Element.data(target, 'x-gestures') still reference gestures
+            // Ext.Element.data(target, 'x-gestures', gestures);
         }
         
         gesture.addListener(eventName, listener);
+        
         // If there is already a finger down, then instantly start the gesture
-        if (this.startedChangedTouch && this.currentTargets.contains(target) && !gesture.started) {
+        if (this.startedChangedTouch && this.currentTargets.contains(target) && !gesture.started && !options.subsequent) {
             this.startGesture(gesture);
             if (gesture.listenForStart) {
                 gesture.onTouchStart(this.startEvent, this.startedTouches[0]);                
@@ -232,6 +328,7 @@ Ext.gesture.Manager = new Ext.AbstractManager({
             for (name in gesture.listeners) {
                 return;
             }
+            
             gesture.destroy();
             gestures.remove(gesture);
             Ext.Element.data(target, 'x-gestures', gestures);

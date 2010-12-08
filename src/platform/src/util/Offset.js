@@ -35,5 +35,13 @@ Ext.util.Offset = Ext.extend(Object, {
             this.x = Math.round(this.x);
             this.y = Math.round(this.y);
         }
+    },
+
+    isZero: function() {
+        return this.x == 0 && this.y == 0;
     }
 });
+
+Ext.util.Offset.fromObject = function(obj) {
+    return new Ext.util.Offset(obj.x, obj.y);
+};

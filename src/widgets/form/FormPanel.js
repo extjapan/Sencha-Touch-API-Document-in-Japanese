@@ -203,20 +203,25 @@ Ext.form.FormPanel = Ext.extend(Ext.Panel, {
      * 
      * <li><b>success</b> : Function
      * <div class="sub-desc">
-     * The callback that will be invoked after a successful response 
+     * The callback that will be invoked after a successful response. A response is successful if
+     * a response is received from the server and is a JSON object where the success property is set
+     * to true, {"success": true} 
      * 
      *  The function is passed the following parameters:
-     *
-      o      * form : Ext.FormPanel The form that requested the action
-      o      * result : The result object returned by the server as a result of the submit request.
+     * <ul>
+     * <li>form : Ext.FormPanel The form that requested the action</li>
+     * <li>result : The result object returned by the server as a result of the submit request.</li>
+     * </ul>
      * </div></li>
      *
      * <li><b>failure</b> : Function
      * <div class="sub-desc">
      * The callback that will be invoked after a
      * failed transaction attempt. The function is passed the following parameters:
-     *     form : The Ext.FormPanel that requested the submit.
-     *     result : The failed response or result object returned by the server which performed the operation.
+     * <ul>
+     * <li>form : The Ext.FormPanel that requested the submit.</li>
+     * <li>result : The failed response or result object returned by the server which performed the operation.</li>
+     * </ul>
      * </div></li>
      * 
      * <li><b>scope</b> : Object
@@ -279,23 +284,27 @@ Ext.form.FormPanel = Ext.extend(Ext.Panel, {
                    {'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8'},
                     options.headers || {}),
                 scope    : this,
-                callback : function(options, success, response) {
-                     this.hideMask();   
+                callback : function(callbackOptions, success, response) {
+                    var responseText = response.responseText;
+                    this.hideMask();
                         
-                     if (success) {
-                          response = Ext.decode(response.responseText);
-                          success = !!response.success;
+                    if (success) {
+
+                        response = Ext.decode(responseText);
+                        success = !!response.success;
+
                         if (success) {
                             if (Ext.isFunction(options.success)) {
-                                options.success.call(options.scope || this, this, response);
+                                options.success.call(options.scope || this, this, response, responseText);
                             }
+
                             this.fireEvent('submit', this, response);
                             return;
                         }
                     }
 
                     if (Ext.isFunction(options.failure)) {
-                        options.failure.call(options.scope || this, this, response);
+                        options.failure.call(options.scope || this, this, response, responseText);
                     }
                     
                     this.fireEvent('exception', this, response);

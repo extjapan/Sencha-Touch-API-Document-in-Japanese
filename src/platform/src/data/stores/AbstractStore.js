@@ -3,10 +3,26 @@
  * @class Ext.data.AbstractStore
  * @extends Ext.util.Observable
  *
- * <p>AbstractStore which provides interactivity with proxies and readers but
- * does NOT rely on any internal data storage representation. Subclasses of
- * Store and TreeStore use the internal representation of Ext.util.MixedCollection
- * and Ext.data.Tree respectively.</p>
+ * <p>AbstractStore is a superclass of {@link Ext.data.Store} and {@link Ext.data.TreeStore}. It's never used directly,
+ * but offers a set of methods used by both of those subclasses.</p>
+ * 
+ * <p>We've left it here in the docs for reference purposes, but unless you need to make a whole new type of Store, what
+ * you're probably looking for is {@link Ext.data.Store}. If you're still interested, here's a brief description of what 
+ * AbstractStore is and is not.</p>
+ * 
+ * <p>AbstractStore provides the basic configuration for anything that can be considered a Store. It expects to be 
+ * given a {@link Ext.data.Model Model} that represents the type of data in the Store. It also expects to be given a 
+ * {@link Ext.data.Proxy Proxy} that handles the loading of data into the Store.</p>
+ * 
+ * <p>AbstractStore provides a few helpful methods such as {@link #load} and {@link #sync}, which load and save data
+ * respectively, passing the requests through the configured {@link #proxy}. Both built-in Store subclasses add extra
+ * behavior to each of these functions. Note also that each AbstractStore subclass has its own way of storing data - 
+ * in {@link Ext.data.Store} the data is saved as a flat {@link Ext.data.MixedCollection MixedCollection}, whereas in
+ * {@link Ext.data.TreeStore TreeStore} we use a {@link Ext.data.Tree} to maintain the data's hierarchy.</p>
+ * 
+ * <p>Finally, AbstractStore provides an API for sorting and filtering data via its {@link #sorters} and {@link #filters}
+ * {@link Ext.data.MixedCollection MixedCollections}. Although this functionality is provided by AbstractStore, there's a
+ * good description of how to use it in the introduction of {@link Ext.data.Store}.
  * 
  */
 Ext.data.AbstractStore = Ext.extend(Ext.util.Observable, {
@@ -110,7 +126,9 @@ Ext.data.AbstractStore = Ext.extend(Ext.util.Observable, {
             /**
              * @event remove
              * Fired when a Model instance has been removed from this Store
+             * @param {Ext.data.Store} store The Store object
              * @param {Ext.data.Model} record The record that was removed
+             * @param {Number} index The index of the record that was removed
              */
             'remove',
             
@@ -322,19 +340,13 @@ Ext.data.AbstractStore = Ext.extend(Ext.util.Observable, {
         return this.proxy.destroy(operation, this.onProxyWrite, this);
     },
 
-
+    /**
+     * @private
+     * Attached as the 'operationcomplete' event listener to a proxy's Batch object. By default just calls through
+     * to onProxyWrite.
+     */
     onBatchOperationComplete: function(batch, operation) {
-        if (operation.action == 'create') {
-            var records = operation.records,
-                length  = records.length,
-                i;
-
-            for (i = 0; i < length; i++) {
-                records[i].needsAdd = false;
-            }
-        }
-        
-        this.fireEvent('datachanged', this);
+        return this.onProxyWrite(operation);
     },
 
     /**
@@ -667,7 +679,7 @@ Ext.data.AbstractStore = Ext.extend(Ext.util.Observable, {
         this.fireEvent('update', this, record, Ext.data.Model.COMMIT);
     },
 
-    clearData: Ext.emptFn,
+    clearData: Ext.emptyFn,
 
     destroyStore: function() {
         if (!this.isDestroyed) {

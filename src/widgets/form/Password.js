@@ -5,7 +5,7 @@
  * @xtype passwordfield
  */
 Ext.form.Password = Ext.extend(Ext.form.Text, {
-    inputType: Ext.is.Android ? 'text' : 'password',
+    inputType: 'password',
     autoCapitalize : false
 });
 

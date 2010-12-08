@@ -113,13 +113,13 @@ store.load({
 
         console.log("Orders for " + user.get('name') + ":")
 
-        //iterate over the User's Orders
+        //iterate over the Orders for each User
         user.orders().each(function(order) {
             console.log("Order ID: " + order.getId() + ", which contains items:");
 
-            //iterate over the Order's OrderItems
+            //iterate over the OrderItems for each Order
             order.orderItems().each(function(orderItem) {
-                //we know that the Product's data is already loaded, so we can use the synchronous getProduct
+                //we know that the Product data is already loaded, so we can use the synchronous getProduct
                 //usually, we would use the asynchronous version (see {@link Ext.data.BelongsToAssociation})
                 var product = orderItem.getProduct();
 
@@ -175,8 +175,8 @@ Ext.data.Reader = Ext.extend(Object, {
     root: '',
     
     /**
-     * @cfg {Boolean} implicitIncludes True to automatically parse models nested within other models in a JSON
-     * object. See JsonReader intro docs for full explanation. Defaults to true.
+     * @cfg {Boolean} implicitIncludes True to automatically parse models nested within other models in a response
+     * object. See the Ext.data.Reader intro docs for full explanation. Defaults to true.
      */
     implicitIncludes: true,
 
@@ -314,37 +314,62 @@ Ext.data.Reader = Ext.extend(Object, {
     readAssociated: function(record, data) {
         var associations = record.associations.items,
             length       = associations.length,
-            association, associationName, associationData, proxy, reader, store, i;
+            association, associationName, associatedModel, associationData, inverseAssociation, proxy, reader, store, i;
         
         for (i = 0; i < length; i++) {
             association     = associations[i];
             associationName = association.name;
-            associationData = data[association.associationKey || associationName];
+            associationData = this.getAssociatedDataRoot(data, association.associationKey || associationName);
+            associatedModel = association.associatedModel;
             
             if (associationData) {
-                proxy = association.associatedModel.getProxy();
+                proxy = associatedModel.proxy;
                 
-                // if the associated model has a Reader already, use that
+                // if the associated model has a Reader already, use that, otherwise attempt to create a sensible one
                 if (proxy) {
                     reader = proxy.getReader();
-                }
-                
-                // otherwise try to create a sensible Reader now
-                if (!reader) {
+                } else {
                     reader = new this.constructor({
                         model: association.associatedName
                     });
+                }
+                
+                if (association.type == 'hasMany') {
+                    store = record[associationName]();
                     
-                    if (association.type == 'hasMany') {
-                        store = record[associationName]();
-                        
-                        store.add.apply(store, reader.read(associationData).records);
-                    } else if (association.type == 'belongsTo') {
-                        record[associationName + "BelongsToInstance"] = reader.read([associationData]).records[0];
+                    store.add.apply(store, reader.read(associationData).records);
+                    
+                    //now that we've added the related records to the hasMany association, set the inverse belongsTo
+                    //association on each of them if it exists
+                    inverseAssociation = associatedModel.prototype.associations.findBy(function(assoc) {
+                        return assoc.type == 'belongsTo' && assoc.associatedName == record.constructor.modelName;
+                    });
+                    
+                    //if the inverse association was found, set it now on each record we've just created
+                    if (inverseAssociation) {
+                        store.data.each(function(associatedRecord) {
+                            associatedRecord[inverseAssociation.instanceName] = record;
+                        });                        
                     }
+
+                } else if (association.type == 'belongsTo') {
+                    record[association.instanceName] = reader.read([associationData]).records[0];
                 }
             }
         }
+    },
+    
+    /**
+     * @private
+     * Used internally by {@link #readAssociated}. Given a data object (which could be json, xml etc) for a specific
+     * record, this should return the relevant part of that data for the given association name. This is only really
+     * needed to support the XML Reader, which has to do a query to get the associated data object
+     * @param {Mixed} data The raw data object
+     * @param {String} associationName The name of the association to get data for (uses associationKey if present)
+     * @return {Mixed} The root
+     */
+    getAssociatedDataRoot: function(data, associationName) {
+        return data[associationName];
     },
 
     /**

@@ -5,7 +5,7 @@
  * @xtype emailfield
  */
 Ext.form.Email = Ext.extend(Ext.form.Text, {
-    inputType: Ext.is.Android ? 'text' : 'email',
+    inputType: 'email',
     
     autoCapitalize: false
 });

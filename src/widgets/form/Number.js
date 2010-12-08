@@ -7,7 +7,7 @@
 Ext.form.Number = Ext.extend(Ext.form.Text, {
     ui: 'number',
 
-    inputType: Ext.is.Android ? 'text' : 'number',
+    inputType: 'number',
     
     minValue : undefined,
     

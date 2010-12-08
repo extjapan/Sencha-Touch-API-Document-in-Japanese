@@ -37,7 +37,7 @@ var myStore = new Ext.data.Store({
  * <p>In the example above we configured an AJAX proxy to load data from the url '/users.json'. We told our Proxy
  * to use a {@link Ext.data.JsonReader JsonReader} to parse the response from the server into Model object -
  * {@link Ext.data.JsonReader see the docs on JsonReader} for details.</p>
- 
+ * 
  * <p><u>Inline data</u></p>
  * 
  * <p>Stores can also load data inline. Internally, Store converts each of the objects we pass in as {@link #data}
@@ -158,7 +158,7 @@ store.sort('height', 'ASC');
 </code></pre>
  * 
  * <p>Note that all existing sorters will be removed in favor of the new sorter data (if {@link #sort} is called with no arguments, 
- * the existing sorters are just reapplied instead of being removed). To keep existing filters and add new ones, just add sorters
+ * the existing sorters are just reapplied instead of being removed). To keep existing sorters and add new ones, just add them
  * to the MixedCollection:</p>
  * 
 <pre><code>
@@ -490,13 +490,14 @@ myStore.add({some: 'data'}, {some: 'other data'});
     /**
      * Converts a literal to a model, if it's not a model already 
      * @private
-     * @{param} record {Ext.data.Model/Object} The record to create
+     * @param record {Ext.data.Model/Object} The record to create
      * @return {Ext.data.Model}
      */
-    createModel: function(record){
+    createModel: function(record) {
         if (!(record instanceof Ext.data.Model)) {
             record = Ext.ModelMgr.create(record, this.model);
         }
+        
         return record;
     },
 
@@ -620,7 +621,7 @@ store.load(function(records, operation, success) {
         this.loading = false;
         this.fireEvent('load', this, records, operation.wasSuccessful());
         
-        //TODO: deprecate this event, it should always have been 'load' instead. 'load' is now documented, 'read' is not
+        //TODO: deprecate this event, it should always have been 'load' instead. 'load' is now documented, 'read' is not.
         //People are definitely using this so can't deprecate safely until 2.x
         this.fireEvent('read', this, records, operation.wasSuccessful());
 
@@ -695,11 +696,11 @@ myStore.sort('myField', 'DESC');
 //sorting by multiple fields
 myStore.sort([
     {
-        field    : 'age',
+        property : 'age',
         direction: 'ASC'
     },
     {
-        field    : 'name',
+        property : 'name',
         direction: 'DESC'
     }
 ]);

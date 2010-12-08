@@ -8,14 +8,37 @@ Ext.lib.Component = Ext.extend(Ext.util.Observable, {
 
     /**
      * @cfg {Mixed} renderTpl
-     * <p>このコンポーネントを覆う{@link #getEl Element}を生成するための{@link Ext.XTemplate XTemplate}。</p>
+     * <p>このコンポーネントを覆う{@link #getEl Element}の内側の構造を生成するための{@link Ext.XTemplate XTemplate}。</p>
      * <p>通常はこのオプションを直接設定することはありません。{@link Ext.Component}や{@link Ext.Container}などの基底
-		 * クラスでは、このプロパティのデフォルト値は<b><tt>div</tt></b>タグとなっています。もっと複雑なクラスでは、より
-		 * 複雑なDOM構造が使われています。</p>
-		 * <p>このプロパティは、開発者がアプリケーション特有のコンポーネントを作成する際に、別のDOM要素を利用可能とする
-		 * ためのものです。</p>
+		 * クラスでは、このプロパティのデフォルト値は<b><tt>null</tt></b>となっています。つまり、これらの基底クラスは内部構造
+		 * 無しで生成されるということです（これらの{@link #getEl Element}は空っぽのまま生成されます）。もっと複雑なクラスでは、
+		 * より複雑なDOM構造が使われていて、それぞれ独自のテンプレートが定義されています。</p>
+		 * <p>このプロパティは、開発者がアプリケーション特有の内部構造を持つコンポーネントを開発する際に便利な用に用意されて
+		 * います。</>p>
+     * <p>描画後であれば、生成された子要素は{@link #renderSelectors}オプションを使ってオブジェクトのプロパティとして自動的に
+		 * 取り込むことができます。</p>
      */
     renderTpl: null,
+
+    /**
+     * @cfg {Object} renderSelectors
+     * <p>コンポーネントを構成するDOM要素を特定するためのプロパティ名と{@link Ext.DomQuery DomQuery}セレクタを組み合わせたオブジェクト。
+		 * を設定します。</p>
+     * <p>{@link renderTpl}に従ってコンポーネントの内部構造が描画されたあと、ここで設定されたオブジェクトの中身が走査され、指定された
+		 * セレクタにマッチしたDOM要素がコンポーネントのプロパティとして追加されます（プロパティ名は<code>renderSelectors</code>のプロパティ
+		 * 名に一致）。</p>
+     * <p>例えば、画像と説明文が次の<code>renderTpl</code>を使ってコンポーネント内に描画されていた場合、下記のような<code>renderSelectors</code>
+		 * を指定することができます：<pre><code>
+renderTpl: '<img src="{imageUrl}" class="x-image-component-img"><div class="x-image-component-desc">{description}</div>',
+
+renderSelectors: {
+    image: 'img.x-image-component-img',
+    descEl: 'div.x-image-component-desc'
+}
+</code></pre>
+     * <p>上記の指定によって、コンポーネントが描画された後、<code>img</code>要素を参照する<code>image</code>というプロパティと、説明文を含む
+		 * <code>div</code>要素を参照する<code>descEl</code>というプロパティがコンポーネントに追加されることになります。</p>
+     */
 
     /**
      * @cfg {Mixed} renderTo
@@ -27,7 +50,7 @@ Ext.lib.Component = Ext.extend(Ext.util.Observable, {
      * <div class="sub-desc">また、このオプションを設定した場合renderメソッドの呼び出しは必要ありません。</div>
      * </ul></li>
      * </ul></div>
-     * <p><tt>{@link #render}</tt>メソッドも参照してください。</p>
+     * <p><code>{@link #render}</code>メソッドも参照してください。</p>
      */
 
     /**
@@ -52,7 +75,7 @@ Ext.lib.Component = Ext.extend(Ext.util.Observable, {
 
     /**
      * @cfg {String} tplWriteMode コンポーネントのコンテンツ領域を描画する際の{@link Ext.Template}、{@link Ext.XTemplate}
-		 * のモード。デフォルト値は<tt>'overwrite'</tt>（上書き）。詳しくは<code>{@link Ext.XTemplate#overwrite}</code>を参照。
+		 * のモード。デフォルト値は<code>'overwrite'</code>（上書き）。詳しくは<code>{@link Ext.XTemplate#overwrite}</code>を参照。
      */
     tplWriteMode: 'overwrite',
 
@@ -534,7 +557,6 @@ Ext.lib.Component = Ext.extend(Ext.util.Observable, {
     // @private
     onRender : function(container, position) {
         var el = this.el,
-            cls = [],
             renderTpl,
             renderData;
 
@@ -552,27 +574,7 @@ Ext.lib.Component = Ext.extend(Ext.util.Observable, {
             container.dom.insertBefore(el.dom, position);
         }
 
-        cls.push(this.baseCls);
-        //<deprecated since=0.99>
-        if (Ext.isDefined(this.cmpCls)) {
-            throw "Ext.Component: cmpCls renamed to componentCls";
-        }
-        //</deprecated>
-        if (this.componentCls) {
-            cls.push(this.componentCls);
-        }
-        else {
-            this.componentCls = this.baseCls;
-        }
-        if (this.cls) {
-            cls.push(this.cls);
-            delete this.cls;
-        }
-        if (this.ui) {
-            cls.push(this.componentCls + '-' + this.ui);
-        }
-        el.addCls(cls);
-        el.addCls(this.additionalCls);
+        el.addCls(this.initCls());
         el.setStyle(this.initStyles());
 
         // Here we check if the component has a height set through style or css.
@@ -595,6 +597,36 @@ Ext.lib.Component = Ext.extend(Ext.util.Observable, {
         this.el = el;
         this.applyRenderSelectors();
         this.rendered = true;
+    },
+
+    /**
+     * <p>Creates an array of class names from the configurations to add to this Component's <code>el</code> on render.</p>
+     * <p>Private, but (possibly) used by ComponentQuery for selection by class name if Component is not rendered.</p>
+     * @return {Array} An array of class names with which the Component's element will be rendered.
+     * @private
+     */
+    initCls: function() {
+        var cls = [ this.baseCls ];
+
+        //<deprecated since=0.99>
+        if (Ext.isDefined(this.cmpCls)) {
+            throw "Ext.Component: cmpCls renamed to componentCls";
+        }
+        //</deprecated>
+        if (this.componentCls) {
+            cls.push(this.componentCls);
+        }
+        else {
+            this.componentCls = this.baseCls;
+        }
+        if (this.cls) {
+            cls.push(this.cls);
+            delete this.cls;
+        }
+        if (this.ui) {
+            cls.push(this.componentCls + '-' + this.ui);
+        }
+        return cls.concat(this.additionalCls);
     },
 
     // @private
@@ -800,6 +832,88 @@ Ext.lib.Component = Ext.extend(Ext.util.Observable, {
             }
             this[selector] = Ext.get(Ext.DomQuery.selectNode(selectors[selector], el));
         }
+    },
+
+    is: function(selector) {
+        return Ext.ComponentQuery.is(this, selector);
+    },
+
+    /**
+     * <p>指定されたセレクタにマッチするコンテナオブジェクトを<code>ownerCt</code>方向に探索します。</p>
+     * <p>例：<pre><code>
+var owningTabContainer = grid.up('tabcontainer');
+</code></pre>
+     * @param {String} selector オプション。マッチさせるセレクタ。
+     * @return {Ext.Container} マッチしたコンテナ（見つからなかった場合<code>undefined</code>）
+     */
+    up: function(selector) {
+        var result = this.ownerCt;
+        if (selector) {
+            for (; result; result = result.ownerCt) {
+                if (Ext.ComponentQuery.is(result, selector)) {
+                    return result;
+                }
+            }
+        }
+        return result;
+    },
+
+    /**
+		 * <p>このコンポーネントと同じ階層で一つ次に位置するコンポーネントを返します。</p>
+     * <p>指定された{@link Ext.ComponentQuery ComponentQuery}セレクタにマッチするコンポーネントを同じ階層を進む方向に探索します。</p>
+     * <p>短縮形として<code>next()</code>としてメソッドを呼び出すこともできます。</p>
+     * @param selector オプション。{@link Ext.ComponentQuery ComponentQuery}セレクタを指定して結果をフィルター
+     * @returns 同じ階層で一つ次に位置する（またはセレクタにマッチする最初の）コンポーネント。マッチするものがない場合はnull。
+     */
+    nextSibling: function(selector) {
+        var o = this.ownerCt, it, last, idx, c; 
+        if (o) {
+            it = o.items;
+            idx = it.indexOf(this) + 1;
+            if (idx) {
+                if (selector) {
+                    for (last = it.getCount(); idx < last; idx++) {
+                        if ((c = it.getAt(idx)).is(selector)) {
+                            return c;
+                        }
+                    }
+                } else {
+                    if (idx < it.getCount()) {
+                        return it.getAt(idx);
+                    }
+                }
+            }
+        }
+        return null;
+    },
+
+    /**
+		 * <p>このコンポーネントと同じ階層で一つ前に位置するコンポーネントを返します。</p>
+     * <p>指定された{@link Ext.ComponentQuery ComponentQuery}セレクタにマッチするコンポーネントを同じ階層を戻る方向に探索します。</p>
+     * <p>短縮形として<code>prev()</code>としてメソッドを呼び出すこともできます。</p>
+     * @param selector オプション。{@link Ext.ComponentQuery ComponentQuery}セレクタを指定して結果をフィルター
+     * @returns 同じ階層で一つ前に位置する（またはセレクタにマッチする最初の）コンポーネント。マッチするものがない場合はnull。
+     */
+    previousSibling: function(selector) {
+        var o = this.ownerCt, it, idx, c; 
+        if (o) {
+            it = o.items;
+            idx = it.indexOf(this);
+            if (idx != -1) {
+                if (selector) {
+                    for (--idx; idx >= 0; idx--) {
+                        if ((c = it.getAt(idx)).is(selector)) {
+                            return c;
+                        }
+                    }
+                } else {
+                    if (idx) {
+                        return it.getAt(--idx);
+                    }
+                }
+            }
+        }
+        return null;
     },
 
     /**
@@ -1326,6 +1440,56 @@ alert(t.getXTypes());  // 'component/field/textfield'と出力
     onPosition: Ext.emptyFn,
 
     /**
+     * Sets the width of the component.  This method fires the {@link #resize} event.
+     * @param {Number} width The new width to setThis may be one of:<div class="mdetail-params"><ul>
+     * <li>A Number specifying the new width in the {@link #getEl Element}'s {@link Ext.Element#defaultUnit}s (by default, pixels).</li>
+     * <li>A String used to set the CSS width style.</li>
+     * </ul></div>
+     * @return {Ext.Component} this
+     */
+    setWidth : function(width) {
+        return this.setSize(width);
+    },
+
+    /**
+     * Sets the height of the component.  This method fires the {@link #resize} event.
+     * @param {Number} height The new height to set. This may be one of:<div class="mdetail-params"><ul>
+     * <li>A Number specifying the new height in the {@link #getEl Element}'s {@link Ext.Element#defaultUnit}s (by default, pixels).</li>
+     * <li>A String used to set the CSS height style.</li>
+     * <li><i>undefined</i> to leave the height unchanged.</li>
+     * </ul></div>
+     * @return {Ext.Component} this
+     */
+    setHeight : function(height) {
+        return this.setSize(undefined, height);
+    },
+
+    /**
+     * Gets the current size of the component's underlying element.
+     * @return {Object} An object containing the element's size {width: (element width), height: (element height)}
+     */
+    getSize : function() {
+        return this.el.getSize();
+    },
+
+    /**
+     * Gets the current width of the component's underlying element.
+     * @return {Number}
+     */
+    getWidth : function() {
+        return this.el.getWidth();
+    },
+
+    /**
+     * Gets the current height of the component's underlying element.
+     * @return {Number}
+     */
+    getHeight : function() {
+        return this.el.getHeight();
+    },
+
+    /**
+    /**
 		 * コンポーネントの幅を設定します。このメソッドは{@link #resize}イベント発行します。
      * @param {Number} width コンポーネントの幅として設定する値。この引数は以下のいずれかが指定できます：<div class="mdetail-params"><ul>
     * <li>このコンポーネントの{@link #getEl トップレベル要素}の{@link Ext.Element#defaultUnit}メソッド指定された単位の数値（デフォルトはピクセル）。</li>
@@ -1448,6 +1612,12 @@ alert(t.getXTypes());  // 'component/field/textfield'と出力
 });
 
 Ext.lib.Component.prototype.on = Ext.lib.Component.prototype.addListener;
+Ext.lib.Component.prototype.prev = Ext.lib.Component.prototype.previousSibling;
+Ext.lib.Component.prototype.next = Ext.lib.Component.prototype.nextSibling;
 
 // @private
 Ext.lib.Component.AUTO_ID = 1000;
+
+// Declare here so we can test
+Ext.Component = Ext.extend(Ext.lib.Component, {});
+Ext.reg('component', Ext.Component);

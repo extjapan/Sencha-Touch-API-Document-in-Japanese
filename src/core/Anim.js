@@ -23,7 +23,7 @@ Ext.Anim = Ext.extend(Object, {
      * True to disable animations. By default, animations are disabled on Android and Blackberry
      */
     disableAnimations: false,
-//    disableAnimations: (Ext.is.Android || Ext.is.Blackberry) ? true : false,
+//    disableAnimations: (!Ext.is.iOS || Ext.is.Blackberry) ? true : false,
 
     defaultConfig: {
         /**

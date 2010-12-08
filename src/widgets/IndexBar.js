@@ -272,16 +272,10 @@ Ext.IndexBar = Ext.extend(Ext.DataView, {
 
     // @private
     onTouchMove : function(e) {
-        e.stopEvent();
-        // Temporary fix since touchstart does not have these properties passed from the gesture Manager
-        if (!e.hasOwnProperty('pageY')) {
-            if (e.hasOwnProperty('event'))
-                e = e.event;
+        e.stopPropagation();
 
-            e = (e.touches && e.touches.length > 0) ? e.touches[0] : e;
-        }
-
-        var target,
+        var point = Ext.util.Point.fromEvent(e),
+            target,
             record,
             pageBox = this.pageBox;
 
@@ -290,16 +284,16 @@ Ext.IndexBar = Ext.extend(Ext.DataView, {
         }
 
         if (this.vertical) {
-            if (e.pageY > pageBox.bottom || e.pageY < pageBox.top) {
+            if (point.y > pageBox.bottom || point.y < pageBox.top) {
                 return;
             }
-            target = Ext.Element.fromPoint(pageBox.left + (pageBox.width / 2), e.pageY);
+            target = Ext.Element.fromPoint(pageBox.left + (pageBox.width / 2), point.y);
         }
         else if (this.horizontal) {
-            if (e.pageX > pageBox.right || e.pageX < pageBox.left) {
+            if (point.x > pageBox.right || point.x < pageBox.left) {
                 return;
             }
-            target = Ext.Element.fromPoint(e.pageX, pageBox.top + (pageBox.height / 2));
+            target = Ext.Element.fromPoint(point.x, pageBox.top + (pageBox.height / 2));
         }
 
         if (target) {

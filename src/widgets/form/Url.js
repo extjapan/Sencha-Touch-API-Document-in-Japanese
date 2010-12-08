@@ -5,7 +5,7 @@
  * @xtype urlfield
  */
 Ext.form.Url = Ext.extend(Ext.form.Text, {
-    inputType: Ext.is.Android ? 'text' : 'url',
+    inputType: 'url',
     
     autoCapitalize: false
 });

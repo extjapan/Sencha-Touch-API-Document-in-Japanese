@@ -8,12 +8,12 @@ Ext.applyIf(Ext.Element, {
     paddings: {l: 'padding-left', r: 'padding-right', t: 'padding-top', b: 'padding-bottom'},
     margins: {l: 'margin-left', r: 'margin-right', t: 'margin-top', b: 'margin-bottom'},
 
-    addUnits : function(size) {
+    addUnits : function(size, units) {
         if (size === "" || size == "auto" || size === null || size === undefined) {
             size = size || '';
         }
         else if (!isNaN(size) || !this.unitRe.test(size)) {
-            size = size + (this.defaultUnit || 'px');
+            size = size + (units || this.defaultUnit || 'px');
         }
         return size;
     },
@@ -54,16 +54,17 @@ Ext.applyIf(Ext.Element, {
      * Parses a number or string representing margin sizes into an object. Supports CSS-style margin declarations
      * (e.g. 10, "10", "10 10", "10 10 10" and "10 10 10 10" are all valid options and would return the same result)
      * @param {Number|String} box The encoded margins
-     * @return {String} An string with unitized (px) metrics for top, right, bottom and left
+     * @param {String} units The type of units to add
+     * @return {String} An string with unitized (px if units is not specified) metrics for top, right, bottom and left
      */
-    unitizeBox : function(box){
+    unitizeBox : function(box, units) {
         var A = this.addUnits,
             B = this.parseBox(box);
             
-        return A( B.top ) + ' ' +
-               A( B.right ) + ' ' +
-               A( B.bottom ) + ' ' +
-               A( B.left );
+        return A(B.top, units) + ' ' +
+               A(B.right, units) + ' ' +
+               A(B.bottom, units) + ' ' +
+               A(B.left, units);
         
     },
 

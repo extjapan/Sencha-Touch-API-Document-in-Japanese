@@ -681,3 +681,7 @@ tb.{@link #doLayout}();             // refresh the layout
         Ext.lib.Container.superclass.beforeDestroy.call(this);
     }
 });
+
+// Declare here so we can test
+Ext.Container = Ext.extend(Ext.lib.Container, {});
+Ext.reg('container', Ext.Container);

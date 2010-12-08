@@ -14,10 +14,8 @@ Ext.ControllerManager = new Ext.AbstractManager({
         
         var controller = new Ext.Controller(options);
         
-        var application = Ext.ApplicationManager.all.items[0];
-        
-        if (application) {
-            controller.application = application;
+        if (this.getCount() > 0) {
+            controller.application = this.all.getValues()[0];
         }
         
         if (controller.init) {

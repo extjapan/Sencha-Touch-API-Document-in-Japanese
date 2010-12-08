@@ -59,15 +59,35 @@ Ext.util.Stateful = Ext.extend(Ext.util.Observable, {
      */
     set: function(fieldName, value) {
         var fields = this.fields,
-            field, key;
+            convertFields = [],
+            field, key, i;
         
+        /*
+         * If we're passed an object, iterate over that object. NOTE: we pull out fields with a convert function and
+         * set those last so that all other possible data is set before the convert function is called
+         */
         if (arguments.length == 1 && Ext.isObject(fieldName)) {
             for (key in fieldName) {
                 if (!fieldName.hasOwnProperty(key)) {
                     continue;
                 }
+                
+                //here we check for the custom convert function. Note that if a field doesn't have a convert function,
+                //we default it to its type's convert function, so we have to check that here. This feels rather dirty.
+                field = fields.get(key);
+                if (field && field.convert !== field.type.convert) {
+                    convertFields.push(key);
+                    continue;
+                }
+                
                 this.set(key, fieldName[key]);
             }
+            
+            for (i = 0; i < convertFields.length; i++) {
+                field = convertFields[i];
+                this.set(field, fieldName[field]);
+            }
+            
         } else {
             if (fields) {
                 field = fields.get(fieldName);
@@ -138,7 +158,7 @@ Ext.util.Stateful = Ext.extend(Ext.util.Observable, {
     
     //<debug>
     markDirty : function() {
-        throw "Stateful: markDirty has been deprecated. Please use setDirty.";
+        throw new Error("Stateful: markDirty has been deprecated. Please use setDirty.");
     },
     //</debug>
     

@@ -16,6 +16,52 @@ Ext.data.ServerProxy = Ext.extend(Ext.data.Proxy, {
      */
     
     /**
+     * @cfg {Object/String/Ext.data.Reader} reader The Ext.data.Reader to use to decode the server's response. This can
+     * either be a Reader instance, a config object or just a valid Reader type name (e.g. 'json', 'xml').
+     */
+    
+    /**
+     * @cfg {Object/String/Ext.data.Writer} writer The Ext.data.Writer to use to encode any request sent to the server.
+     * This can either be a Writer instance, a config object or just a valid Writer type name (e.g. 'json', 'xml').
+     */
+    
+    /**
+     * @cfg {String} pageParam The name of the 'page' parameter to send in a request. Defaults to 'page'. Set this to
+     * undefined if you don't want to send a page parameter
+     */
+    pageParam: 'page',
+    
+    /**
+     * @cfg {String} startParam The name of the 'start' parameter to send in a request. Defaults to 'start'. Set this
+     * to undefined if you don't want to send a start parameter
+     */
+    startParam: 'start',
+
+    /**
+     * @cfg {String} limitParam The name of the 'limit' parameter to send in a request. Defaults to 'limit'. Set this
+     * to undefined if you don't want to send a limit parameter
+     */
+    limitParam: 'limit',
+    
+    /**
+     * @cfg {String} groupParam The name of the 'group' parameter to send in a request. Defaults to 'group'. Set this
+     * to undefined if you don't want to send a group parameter
+     */
+    groupParam: 'group',
+    
+    /**
+     * @cfg {String} sortParam The name of the 'sort' parameter to send in a request. Defaults to 'sort'. Set this
+     * to undefined if you don't want to send a sort parameter
+     */
+    sortParam: 'sort',
+    
+    /**
+     * @cfg {String} filterParam The name of the 'filter' parameter to send in a request. Defaults to 'filter'. Set 
+     * this to undefined if you don't want to send a filter parameter
+     */
+    filterParam: 'filter',
+    
+    /**
      * @cfg {Boolean} noCache (optional) Defaults to true. Disable caching by adding a unique parameter
      * name to the request.
      */
@@ -35,6 +81,8 @@ Ext.data.ServerProxy = Ext.extend(Ext.data.Proxy, {
      * @ignore
      */
     constructor: function(config) {
+        config = config || {};
+        
         Ext.data.ServerProxy.superclass.constructor.call(this, config);
         
         /**
@@ -95,21 +143,103 @@ Ext.data.ServerProxy = Ext.extend(Ext.data.Proxy, {
     },
     
     /**
+     * Encodes the array of {@link Ext.util.Sorter} objects into a string to be sent in the request url. By default, 
+     * this simply JSON-encodes the sorter data
+     * @param {Array} sorters The array of {@link Ext.util.Sorter Sorter} objects
+     * @return {String} The encoded sorters
+     */
+    encodeSorters: function(sorters) {
+        var min = [],
+            length = sorters.length,
+            i;
+        
+        for (i = 0; i < length; i++) {
+            min[i] = {
+                property : sorters[i].property,
+                direction: sorters[i].direction
+            };
+        }
+        
+        return Ext.encode(min);
+    },
+    
+    /**
+     * Encodes the array of {@link Ext.util.Filter} objects into a string to be sent in the request url. By default, 
+     * this simply JSON-encodes the filter data
+     * @param {Array} sorters The array of {@link Ext.util.Filter Filter} objects
+     * @return {String} The encoded filters
+     */
+    encodeFilters: function(filters) {
+        var min = [],
+            length = filters.length,
+            i;
+        
+        for (i = 0; i < length; i++) {
+            min[i] = {
+                property: filters[i].property,
+                value   : filters[i].value
+            };
+        }
+        
+        return Ext.encode(min);
+    },
+    
+    /**
+     * Encodes the grouping object (field and direction) into a string to be sent in the request url. Be default, this
+     * simply JSON-encodes the grouping data
+     * @param {Object} group The group configuration (field and direction)
+     * @return {String} The encoded group string
+     */
+    encodeGroupers: function(group) {
+        return Ext.encode(group);
+    },
+    
+    /**
      * @private
      * Copy any sorters, filters etc into the params so they can be sent over the wire
      */
     getParams: function(params, operation) {
-        var options = ['page', 'start', 'limit', 'group', 'filters', 'sorters'],
-            o = {},
-            len = options.length,
-            i, opt;
+        params = params || {};
+        
+        var group       = operation.group,
+            sorters     = operation.sorters,
+            filters     = operation.filters,
+            page        = operation.page,
+            start       = operation.start,
+            limit       = operation.limit,
             
-        for (i = 0; i < len; ++i) {
-            opt = options[i];
-            o[opt] = params[opt] || operation[opt] || o[opt];
+            pageParam   = this.pageParam,
+            startParam  = this.startParam,
+            limitParam  = this.limitParam,
+            groupParam  = this.groupParam,
+            sortParam   = this.sortParam,
+            filterParam = this.filterParam;
+        
+        if (pageParam && page) {
+            params[pageParam] = page;
         }
         
-        return o;
+        if (startParam && start) {
+            params[startParam] = start;
+        }
+        
+        if (limitParam && limit) {
+            params[limitParam] = limit;
+        }
+        
+        if (groupParam && group && group.field) {
+            params[groupParam] = this.encodeGroupers(group);
+        }
+        
+        if (sortParam && sorters && sorters.length > 0) {
+            params[sortParam] = this.encodeSorters(sorters);
+        }
+        
+        if (filterParam && filters && filters.length > 0) {
+            params[filterParam] = this.encodeFilters(filters);
+        }
+        
+        return params;
     },
     
     /**
@@ -123,7 +253,7 @@ Ext.data.ServerProxy = Ext.extend(Ext.data.Proxy, {
         var url = request.url || this.url;
         
         if (!url) {
-            throw "You are using a ServerProxy but have not supplied it with a url. ";
+            throw new Error("You are using a ServerProxy but have not supplied it with a url.");
         }
         
         if (this.noCache) {

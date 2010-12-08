@@ -191,6 +191,27 @@ Ext.DataView = Ext.extend(Ext.Component, {
             this.selModel = {};
         }
 
+        var mode;
+        switch(true) {
+            case this.simpleSelect:
+                mode = 'SIMPLE';
+            break;
+            
+            case this.multiSelect:
+                mode = 'MULTI';
+            break;
+            
+            case this.singleSelect:
+            default:
+                mode = 'SINGLE';
+            break;
+        }
+        
+        Ext.applyIf(this.selModel, {
+            allowDeselect: this.allowDeselect,
+            mode: mode
+        });        
+        
         if (!this.selModel.events) {
             this.selModel = new Ext.DataViewSelectionModel(this.selModel);
         }
@@ -464,7 +485,11 @@ Ext.DataView = Ext.extend(Ext.Component, {
                 this.loadMask.bindStore(store);
             }
         }
+        
         this.store = store;
+        // Bind the store to our selection model
+        this.getSelectionModel().bind(store);
+        
         if (store) {
             this.refresh();
         }

@@ -19,10 +19,8 @@ Ext.regModel('User', {
         {name: 'id',   type: 'int'},
         {name: 'name', type: 'string'}
     ],
-
-    associations: [
-        {type: 'hasMany', model: 'Product', name: 'products'}
-    ]
+    
+    hasMany: {model: 'Product', name: 'products'}
 });
 </pre></code>
 * 

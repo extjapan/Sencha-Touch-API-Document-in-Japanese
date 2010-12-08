@@ -511,6 +511,7 @@ Ext.NestedList = Ext.extend(Ext.Panel, {
         // </debug>
 
         this.setActiveItem(lastCard, false);
+        this.fireEvent('listchange', this, lastCard);
         this.syncToolbar();
     },
 

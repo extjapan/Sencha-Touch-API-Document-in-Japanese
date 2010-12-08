@@ -3,7 +3,7 @@
  * @class Ext.data.BelongsToAssociation
  * @extends Ext.data.Association
  * 
- * <p>Represents a one to one association with another model. The owner model is expected to have
+ * <p>Represents a many to one association with another model. The owner model is expected to have
  * a foreign key which references the primary key of the associated model:</p>
  * 
 <pre><code>
@@ -49,15 +49,17 @@ product.getCategory(function(category, operation) {
 * 
  * <p>The getCategory function was created on the Product model when we defined the association. This uses the
  * Category's configured {@link Ext.data.Proxy proxy} to load the Category asynchronously, calling the provided
- * callback when it has loaded. The new getCategory function will also accept an object containing success, 
- * failure and callback properties - callback will always be called, success will only be called if the associated
- * model was loaded successfully and failure will only be called if the associatied model could not be loaded:</p>
+ * callback when it has loaded.</p>
+ * 
+ * <p>The new getCategory function will also accept an object containing success, failure and callback properties
+ * - callback will always be called, success will only be called if the associated model was loaded successfully
+ * and failure will only be called if the associatied model could not be loaded:</p>
  * 
 <pre><code>
 product.getCategory({
-    callback: function(category, operation), //a function that will always be called
-    success : function(category, operation), //a function that will only be called if the load succeeded
-    failure : function(category, operation), //a function that will only be called if the load did not succeed
+    callback: function(category, operation) {}, //a function that will always be called
+    success : function(category, operation) {}, //a function that will only be called if the load succeeded
+    failure : function(category, operation) {}, //a function that will only be called if the load did not succeed
     scope   : this //optionally pass in a scope object to execute the callbacks in
 });
 </code></pre>
@@ -140,8 +142,9 @@ Ext.data.BelongsToAssociation = Ext.extend(Ext.data.Association, {
             setterName     = me.setterName || 'set' + associatedName;
 
         Ext.applyIf(me, {
-            name      : associatedName,
-            foreignKey: associatedName.toLowerCase() + "_id"
+            name        : associatedName,
+            foreignKey  : associatedName.toLowerCase() + "_id",
+            instanceName: associatedName + 'BelongsToInstance'
         });
         
         ownerProto[getterName] = me.createGetter();
@@ -190,7 +193,7 @@ Ext.data.BelongsToAssociation = Ext.extend(Ext.data.Association, {
             associatedModel = me.associatedModel,
             foreignKey      = me.foreignKey,
             primaryKey      = me.primaryKey,
-            instanceName    = me.name + 'BelongsToInstance';
+            instanceName    = me.instanceName;
         
         //'this' refers to the Model instance inside this function
         return function(options, scope) {

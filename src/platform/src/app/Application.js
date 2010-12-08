@@ -367,15 +367,11 @@ Ext.Application = Ext.extend(Ext.util.Observable, {
      * @param {String} profile The new profile name
      */
     updateComponentProfiles: function(profile) {
-        var components = Ext.ComponentMgr.all.items,
-            length     = components.length,
-            i;
-        
-        for (i = 0; i < length; i++) {
-            if (components[i].setProfile) {
-                components[i].setProfile(profile);
+        Ext.ComponentMgr.each(function(key, component){
+            if (component.setProfile) {
+                component.setProfile(profile);
             }
-        }
+        });
     },
     
     /**

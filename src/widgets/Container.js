@@ -63,14 +63,20 @@ Ext.Container = Ext.extend(Ext.lib.Container, {
         Ext.Container.superclass.afterRender.apply(this, arguments);
 
         if (this.scroller) {
+            if (Ext.is.Android && this.containsFormFields) {
+                this.scroller.setUseCssTransform(false);
+            }
+            
             this.scroller.on('scrollstart', this.onFieldScrollStart, this);
         }
     },
 
     onFieldScrollStart: function() {
-        if (this.focusedField && !Ext.is.Android) {
-            this.focusedField.blur();
-            Ext.Viewport.scrollToTop();
+        var focusedField = this.focusedField;
+
+        if (focusedField && Ext.is.iOS) {
+            focusedField.blur();
+//            Ext.Viewport.scrollToTop();
         }
     },
 
@@ -108,6 +114,8 @@ Ext.Container = Ext.extend(Ext.lib.Container, {
                     keyup: function(e) {this.onFieldKeyUp(item, e);},
                     scope: this
                 };
+
+                this.containsFormFields = true;
             }
 
             item[isAdding ? 'on' : 'un'](this.fieldEventWrap[item.id]);
@@ -142,16 +150,15 @@ Ext.Container = Ext.extend(Ext.lib.Container, {
     },
 
     adjustScroller: function(offset) {
-        var me = this,
-            scroller = this.getClosestScroller(),
+        var scroller = this.getClosestScroller(),
             windowScroll = this.getLastWindowScroll();
 
         scroller.setOffset(offset);
 
         // Keep the window in the previous scroll position
-        if (Ext.is.Android) {
-            window.scrollTo(windowScroll.x, windowScroll.y || -1);
-        } else {
+        if (Ext.is.iOS) {
+//            window.scrollTo(windowScroll.x, windowScroll.y || -1);
+//        } else {
             window.scrollTo(windowScroll.x, windowScroll.y);
         }
 
@@ -159,38 +166,40 @@ Ext.Container = Ext.extend(Ext.lib.Container, {
     },
 
     onFieldFocus: function(field, e) {
-        if (Ext.is.Android) {
-            this.scroller.setUseCssTransform(false);
-        }
-        
-        Ext.currentlyFocusedField = field;
 
-        var me = this,
-            scroller = this.getClosestScroller(),
+        var scroller = this.getClosestScroller(),
             containerRegion = Ext.util.Region.from(scroller.containerBox),
-            fieldRegion = field.fieldEl.getPageBox(true),
-            fieldSize = fieldRegion.getSize();
+            fieldRegion = field.fieldEl.getPageBox(true);
 
-        // Focus by mouse click or finger tap
-        if (this.focusingField == field) {
+        // Focus by mouse click or finger tap, or not iOS
+        if (this.focusingField == field || !Ext.is.iOS) {
             if (Ext.is.iOS && window.pageYOffset == 0) {
                 window.scrollTo(0, 0);
             }
-            
-            var offsetContainerRegion = containerRegion.copy();
-            offsetContainerRegion.bottom -= fieldSize.height;
-            offsetContainerRegion.right -= fieldSize.width;
 
-            var outOfBoundDistance = new Ext.util.Offset(
-                offsetContainerRegion.left - scroller.offset.x, offsetContainerRegion.top - scroller.offset.top
-            );
+            var adjustment = new Ext.util.Offset();
 
-            if (outOfBoundDistance.x > 0 || outOfBoundDistance.y > 0) {
-                this.adjustScroller(new Ext.util.Offset(
-                    scroller.offset.x + outOfBoundDistance.x, scroller.offset.y + outOfBoundDistance.y
-                ));
+            if (fieldRegion.left < containerRegion.left) {
+                adjustment.x = containerRegion.left - fieldRegion.left;
+            }
+
+            if (fieldRegion.top < containerRegion.top) {
+                adjustment.y = containerRegion.top - fieldRegion.top;
+            }
+
+            if (!adjustment.isZero()) {
+                var windowScroll = this.getLastWindowScroll();
+
+                scroller.scrollBy(adjustment);
+
+                if (Ext.is.iOS) {
+                    window.scrollTo(windowScroll.x, windowScroll.y);
+                }
+
+                this.resetLastWindowScroll();
             }
         }
+        // Focus by next / previous / tab
         else {
             if (this.lastFocusedField) {
                 var deltaY = fieldRegion.top - this.lastFocusedField.fieldEl.getY(),
@@ -219,8 +228,6 @@ Ext.Container = Ext.extend(Ext.lib.Container, {
         this.lastFocusedField = field;
         this.focusedField = field;
         this.focusingField = null;
-
-        Ext.Viewport.hideStretchEl();
     },
 
     getClosestScroller: function() {
@@ -232,10 +239,6 @@ Ext.Container = Ext.extend(Ext.lib.Container, {
     },
 
     onFieldBlur: function(field, e) {
-        Ext.Viewport.showStretchEl();
-
-        Ext.currentlyFocusedField = null;
-
         if (this.focusingField == field) {
             this.focusingField = null;
         }

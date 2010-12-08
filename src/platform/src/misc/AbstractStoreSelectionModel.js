@@ -77,7 +77,7 @@ Ext.AbstractStoreSelectionModel = Ext.extend(Ext.util.Observable, {
             });
         }
         this.store = store;
-        if(store && !initial){
+        if(store && !initial) {
             this.refresh();
         }
     },

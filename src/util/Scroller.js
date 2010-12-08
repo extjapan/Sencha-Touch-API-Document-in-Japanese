@@ -101,11 +101,11 @@ Ext.util.ScrollView = Ext.extend(Ext.util.Observable, {
         this.boundarySize = boundary.getSize();
 
         if (!this.indicatorSizes) {
-            this.indicatorSizes = { vertical: 0, horizontal: 0 };
+            this.indicatorSizes = {vertical: 0, horizontal: 0};
         }
 
         if (!this.indicatorOffsets) {
-            this.indicatorOffsets = { vertical: 0, horizontal: 0 };
+            this.indicatorOffsets = {vertical: 0, horizontal: 0};
         }
 
         Ext.iterate(this.indicators, function(axis, indicator) {
@@ -208,7 +208,9 @@ Ext.util.Scroller = Ext.extend(Ext.util.Draggable, {
      * @cfg {Number} fps
      * The desired fps of the deceleration. Defaults to 80.
      */
-    fps: 80,
+    fps: Ext.is.Blackberry ? 22 : 80,
+
+    autoAdjustFps: !Ext.is.Blackberry,
 
     /**
      * @cfg {Number} friction
@@ -264,7 +266,6 @@ Ext.util.Scroller = Ext.extend(Ext.util.Draggable, {
             return Ext.apply(scroller, config);
         }
 
-//        this.eventTarget = el.parent();
         Ext.util.Scroller.superclass.constructor.apply(this, arguments);
 
         this.addEvents(
@@ -302,6 +303,7 @@ Ext.util.Scroller = Ext.extend(Ext.util.Draggable, {
 
         this.on({
             dragstart: this.onDragStart,
+            offsetchange: this.onOffsetChange,
             scope: this
         });
 
@@ -321,10 +323,7 @@ Ext.util.Scroller = Ext.extend(Ext.util.Draggable, {
             };
         }
 
-        this.frameDuration = 1000 / this.fps;
         this.theta = Math.log(1 - (this.friction / 10));
-
-//        this.updateBoundary();
 
         if (!this.decelerationAnimation) {
             this.decelerationAnimation = {};
@@ -353,6 +352,10 @@ Ext.util.Scroller = Ext.extend(Ext.util.Draggable, {
         return this;
     },
 
+    getFrameDuration: function() {
+        return 1000 / this.fps;
+    },
+
     // Inherited docs
     updateBoundary: function() {
         Ext.util.Scroller.superclass.updateBoundary.apply(this, arguments);
@@ -363,20 +366,17 @@ Ext.util.Scroller = Ext.extend(Ext.util.Draggable, {
     },
 
     // Inherited docs
-    setOffset: function(p) {
-//        p.round();
-        
-        Ext.util.Scroller.superclass.setOffset.apply(this, arguments);
-
-        this.fireEvent('scroll', this, this.getOffset());
-
-        return this;
+    onOffsetChange: function(scroller, offset) {
+        this.fireEvent('scroll', scroller, {
+            x: -offset.x,
+            y: -offset.y
+        });
     },
 
     // @private
     onTouchStart: function(e) {
         Ext.util.Scroller.superclass.onTouchStart.apply(this, arguments);
-        
+
         this.stopMomentumAnimation();
     },
 
@@ -386,16 +386,23 @@ Ext.util.Scroller = Ext.extend(Ext.util.Draggable, {
     },
 
     // @private
+    setStartTime: function(e) {
+        this.startTime = e.time;
+        this.originalStartTime = (e.event.originalTimeStamp) ? e.event.originalTimeStamp : e.time;
+    },
+
+    // @private
     onStart: function(e) {
         if (Ext.util.Scroller.superclass.onStart.apply(this, arguments) !== true)
             return;
-        
-        this.startTime = e.event.timeStamp;
-        this.lastEventTime = e.event.timeStamp;
+
+        this.setStartTime(e);
+        this.lastEventTime = e.time;
         this.startTimeOffset = this.offset.copy();
+        this.isScrolling = true;
 
         //<debug>
-        this.framesHandled = 0;
+        this.momentumAnimationFramesHandled = 0;
         //</debug>
     },
 
@@ -404,10 +411,10 @@ Ext.util.Scroller = Ext.extend(Ext.util.Draggable, {
         if (Ext.util.Scroller.superclass.onDrag.apply(this, arguments) !== true)
             return;
 
-        this.lastEventTime = e.event.timeStamp;
+        this.lastEventTime = e.time;
 
         if (this.lastEventTime - this.startTime > this.startMomentumResetTime) {
-            this.startTime = this.lastEventTime;
+            this.setStartTime(e);
             this.startTimeOffset = this.offset.copy();
         }
     },
@@ -431,12 +438,11 @@ Ext.util.Scroller = Ext.extend(Ext.util.Draggable, {
 
     // @private
     fireScrollEndEvent: function() {
+        this.isScrolling = false;
         this.isMomentumAnimating = false;
         this.snapToBoundary();
         this.fireEvent('scrollend', this, this.getOffset());
-        //<debug>
-        this.endTime = Date.now();
-        //</debug>
+        
         this.snapToSlot();
     },
 
@@ -447,8 +453,8 @@ Ext.util.Scroller = Ext.extend(Ext.util.Draggable, {
      * @return {Number} The actual fps
      */
     getLastActualFps: function() {
-        var duration = (this.endTime - this.startTime) * 1000;
-        return this.framesHandled / duration;
+        var duration = (this.momentumAnimationEndTime - this.momentumAnimationStartTime - this.momentumAnimationProcessingTime) / 1000;
+        return this.momentumAnimationFramesHandled / duration;
     },
     //</debug>
 
@@ -469,6 +475,25 @@ Ext.util.Scroller = Ext.extend(Ext.util.Draggable, {
         return this;
     },
 
+    /*
+     * Change the scroll offset by the given amount
+     * @param {Ext.util.Offset/Object} offset The amount to scroll by, e.g {x: 100, y: 200}
+     * @param {Number/Boolean} animate Whether or not to animate while changing the scroll position.
+     * If it's a number, will be treated as the duration in ms
+     * @return {Ext.util.Scroller} this This Scroller
+     */
+    scrollBy: function(offset, animate) {
+        this.stopMomentumAnimation();
+
+        var newOffset = this.offset.copy();
+        newOffset.x += offset.x;
+        newOffset.y += offset.y;
+
+        this.setOffset(newOffset, animate);
+
+        return this;
+    },
+
     // @private
     setSnap: function(snap) {
         this.snap = snap;
@@ -480,11 +505,7 @@ Ext.util.Scroller = Ext.extend(Ext.util.Draggable, {
      */
     snapToBoundary: function() {
         var offset = this.offsetBoundary.restrict(this.offset);
-        offset.round();
-        
-        if (!this.offset.equals(offset)) {
-            this.setOffset(offset);
-        }
+        this.setOffset(offset);
 
         return this;
     },
@@ -521,40 +542,46 @@ Ext.util.Scroller = Ext.extend(Ext.util.Draggable, {
 
     // @private
     startMomentumAnimation: function(e) {
+        var originalTime = (e.event.originalTimeStamp) ? e.event.originalTimeStamp : e.time,
+            duration = originalTime - this.originalStartTime;
+
         if (
-            (!this.momentum || !((e.event.timeStamp - this.lastEventTime) <= this.startMomentumResetTime)) &&
+            (!this.momentum || !(duration <= this.startMomentumResetTime)) &&
             !this.offsetBoundary.isOutOfBound(this.offset)
         ) {
             return false;
         }
-        
+
         // Determine the duration of the momentum
-        var duration = (e.time - this.startTime),
-            minVelocity = this.minVelocityForAnimation,
+        var minVelocity = this.minVelocityForAnimation,
             currentVelocity,
             currentOffset = this.offset.copy(),
             restrictedOffset;
 
         this.isBouncing = {x: false, y: false};
         this.isDecelerating = {x: false, y: false};
+        this.momentumAnimationStartTime = e.time;
+        this.momentumAnimationProcessingTime = 0;
         
         // Determine the deceleration velocity
-        this.animationStartVelocity = {
+        this.momentumAnimationStartVelocity = {
             x: (this.offset.x - this.startTimeOffset.x) / (duration / this.acceleration),
             y: (this.offset.y - this.startTimeOffset.y) / (duration / this.acceleration)
         };
         
-        this.animationStartOffset = currentOffset;
+        this.momentumAnimationStartOffset = currentOffset;
 
         ['x', 'y'].forEach(function(axis) {
-            this.isDecelerating[axis] = (Math.abs(this.animationStartVelocity[axis]) > minVelocity);
+
+            this.isDecelerating[axis] = (Math.abs(this.momentumAnimationStartVelocity[axis]) > minVelocity);
+
             if (this.bounces && this.bounces[axis]) {
                 restrictedOffset = this.offsetBoundary.restrict(axis, currentOffset[axis]);
                 
                 if (restrictedOffset != currentOffset[axis]) {
                     currentVelocity = (currentOffset[axis] - restrictedOffset) * this.springTension * Math.E;
                     this.bouncingAnimation[axis].set({
-                        startTime: e.time - ((1 / this.springTension) * this.acceleration),
+                        startTime: this.momentumAnimationStartTime - ((1 / this.springTension) * this.acceleration),
                         startOffset: restrictedOffset,
                         startVelocity: currentVelocity
                     });
@@ -562,7 +589,7 @@ Ext.util.Scroller = Ext.extend(Ext.util.Draggable, {
                     this.fireEvent('bouncestart', this, {
                         axis: axis,
                         offset: restrictedOffset,
-                        time: e.time,
+                        time: this.momentumAnimationStartTime,
                         velocity: currentVelocity
                     });
                     this.isDecelerating[axis] = false;
@@ -571,18 +598,18 @@ Ext.util.Scroller = Ext.extend(Ext.util.Draggable, {
             
             if (this.isDecelerating[axis]) {
                 this.decelerationAnimation[axis].set({
-                    startVelocity: this.animationStartVelocity[axis],
-                    startOffset: this.animationStartOffset[axis],
-                    startTime: e.time
+                    startVelocity: this.momentumAnimationStartVelocity[axis],
+                    startOffset: this.momentumAnimationStartOffset[axis],
+                    startTime: this.momentumAnimationStartTime
                 });
             }
         }, this);
         
         if (this.isDecelerating.x || this.isDecelerating.y || this.isBouncing.x || this.isBouncing.y) {
             this.isMomentumAnimating = true;
-            this.framesHandled = 0;
+            this.momentumAnimationFramesHandled = 0;
             this.fireEvent('momentumanimationstart');
-            this.momentumAnimationTimer = Ext.defer(this.handleMomentumAnimationFrame, this.frameDuration, this);
+            this.momentumAnimationTimer = Ext.defer(this.handleMomentumAnimationFrame, this.getFrameDuration(), this);
             return true;
         }
 
@@ -595,16 +622,37 @@ Ext.util.Scroller = Ext.extend(Ext.util.Draggable, {
             if (this.momentumAnimationTimer) {
                 clearTimeout(this.momentumAnimationTimer);
             }
+            this.momentumAnimationEndTime = Date.now();
 
+            //<debug>
+            var lastFps = this.getLastActualFps();
+
+            if (!this.maxFps || lastFps > this.maxFps) {
+                this.maxFps = lastFps;
+            }
+
+            if (this.autoAdjustFps) {
+                this.fps = this.maxFps;
+            }
+            //</debug>
+            
             this.isDecelerating = {};
             this.isBouncing = {};
 
             this.fireEvent('momentumanimationend');
             this.fireScrollEndEvent();
+
         }
 
         return this;
     },
+
+//    fireEvent: function(name) {
+//        if (['scroll', 'offsetchange'].indexOf(name) == -1) {
+//            console.log(name);
+//        }
+//        return Ext.util.Scroller.superclass.fireEvent.apply(this, arguments);
+//    },
     
     /**
      * @private
@@ -614,7 +662,7 @@ Ext.util.Scroller = Ext.extend(Ext.util.Draggable, {
             return;
         }
 
-        this.momentumAnimationTimer = Ext.defer(this.handleMomentumAnimationFrame, this.frameDuration, this);
+        this.momentumAnimationTimer = Ext.defer(this.handleMomentumAnimationFrame, this.getFrameDuration(), this);
         
         var currentTime = Date.now(),
             newOffset = this.offset.copy(),
@@ -625,7 +673,7 @@ Ext.util.Scroller = Ext.extend(Ext.util.Draggable, {
         ['x', 'y'].forEach(function(axis) {
             if (this.isDecelerating[axis]) {
                 newOffset[axis] = this.decelerationAnimation[axis].getOffset();
-                currentVelocity = this.animationStartVelocity[axis] * this.decelerationAnimation[axis].getFrictionFactor();
+                currentVelocity = this.momentumAnimationStartVelocity[axis] * this.decelerationAnimation[axis].getFrictionFactor();
                 outOfBoundDistance = this.offsetBoundary.getOutOfBoundOffset(axis, newOffset[axis]);
 
                 // If the new offset is out of boundary, we are going to start a bounce
@@ -674,7 +722,8 @@ Ext.util.Scroller = Ext.extend(Ext.util.Draggable, {
         }
 
         //<debug>
-        this.framesHandled++;
+        this.momentumAnimationFramesHandled++;
+        this.momentumAnimationProcessingTime += Date.now() - currentTime;
         //</debug>
         
         this.setOffset(newOffset);
@@ -820,8 +869,16 @@ Ext.util.Scroller.Indicator = Ext.extend(Object, {
         } else {
             this.offset.x = offset;
         }
-        
-        Ext.Element.cssTranslate(this.el, this.offset);
+
+        if (!Ext.is.iOS && !Ext.is.Desktop) {
+            if (this.type == 'vertical') {
+                this.el.dom.style.top = this.offset.y + 'px';
+            } else {
+                this.el.dom.style.left = this.offset.x + 'px';
+            }
+        } else {
+            Ext.Element.cssTranslate(this.el, this.offset);
+        }
 
         return this;
     }

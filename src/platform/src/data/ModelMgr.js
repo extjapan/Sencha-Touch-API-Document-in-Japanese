@@ -248,10 +248,16 @@ Ext.ModelMgr = new Ext.AbstractManager({
         return model;
     },
     
-    create: function(config, name) {
+    /**
+     * Creates a new instance of a Model using the given data.
+     * @param {Object} data Data to initialize the Model's fields with
+     * @param {String} name The name of the model to create
+     * @param {Number} id Optional unique id of the Model instance (see {@link Ext.data.Model})
+     */
+    create: function(config, name, id) {
         var con = typeof name == 'function' ? name : this.types[name || config.name];
         
-        return new con(config);
+        return new con(config, id);
     }
 });
 

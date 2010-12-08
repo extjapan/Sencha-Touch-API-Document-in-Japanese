@@ -276,3 +276,7 @@ var panel = new Ext.Panel({
         Ext.lib.Panel.superclass.beforeDestroy.call(this);
     }
 });
+
+// Declare here so we can test
+Ext.Panel = Ext.extend(Ext.lib.Panel, {});
+Ext.reg('panel', Ext.Panel);

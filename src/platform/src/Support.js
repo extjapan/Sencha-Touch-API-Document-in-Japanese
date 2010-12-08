@@ -162,7 +162,21 @@ Ext.supports = {
      * @property OrientationChange True if the device supports orientation change
      * @type {Boolean}
      */
-    OrientationChange: !Ext.is.Desktop && (((typeof window.orientation != 'undefined') || window.hasOwnProperty('orientation')) && ('onorientationchange' in window)),
+    OrientationChange: ((typeof window.orientation != 'undefined') && ('onorientationchange' in window)),
+
+    /**
+     * @property DeviceMotion True if the device supports device motion (acceleration and rotation rate)
+     * @type {Boolean}
+     */
+    DeviceMotion: ('ondevicemotion' in window),
+
+    /**
+     * @property Touch True if the device supports touch
+     * @type {Boolean}
+     */
+    // is.Desktop is needed due to the bug in Chrome 5.0.375, Safari 3.1.2
+    // and Safari 4.0 (they all have 'ontouchstart' in the window object).
+    Touch: ('ontouchstart' in window) && (!Ext.is.Desktop),
 
     tests: [
         /**
@@ -200,17 +214,6 @@ Ext.supports = {
                     }
                 }
                 return out;
-            }
-        },
-        
-        /**
-         * @property Touch True if the device supports touch 
-         * @type {Boolean}
-         */
-        {
-            identity: 'Touch',
-            fn: function(doc, div) {
-                return (!Ext.is.Desktop && ('ontouchstart' in div));
             }
         },
         
@@ -314,6 +317,25 @@ Ext.supports = {
             identity: 'CSS3DTransform',
             fn: function() {
                 return (typeof WebKitCSSMatrix != 'undefined' && new WebKitCSSMatrix().hasOwnProperty('m41'));
+            }
+        },
+
+		/**
+         * @property CSS3LinearGradient True if the device supports CSS3 linear gradients
+         * @type {Boolean}
+         */
+        {
+            identity: 'CSS3LinearGradient',
+            fn: function(doc, div) {
+                var property = 'background-image:',
+                    webkit   = '-webkit-gradient(linear, left top, right bottom, from(black), to(white))',
+                    w3c      = 'linear-gradient(left top, black, white)',
+                    moz      = '-moz-' + w3c,
+                    options  = [property + webkit, property + w3c, property + moz];
+                
+                div.style.cssText = options.join(';');
+                
+                return ("" + div.style.backgroundImage).indexOf('gradient') !== -1;
             }
         },
         

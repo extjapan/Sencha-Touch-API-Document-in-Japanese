@@ -60,10 +60,15 @@ Ext.util.Point = Ext.extend(Object, {
      * Whether the given point is not away from this point within the given threshold amount
      * @param {Ext.util.Point/Object} The point to check with, either an instance
      * of Ext.util.Point or an object with x and y properties
-     * @param {Number} threshold
+     * @param {Object/Number} threshold Can be either an object with x and y properties or a number
      * @return {Boolean}
      */
     isWithin: function(p, threshold) {
+        if (!Ext.isObject(threshold)) {
+            threshold = {x: threshold};
+            threshold.y = threshold.x;
+        }
+
         return (this.x <= p.x + threshold.x && this.x >= p.x - threshold.x &&
                 this.y <= p.y + threshold.y && this.y >= p.y - threshold.y);
     },
@@ -98,7 +103,7 @@ Ext.util.Point = Ext.extend(Object, {
  * Returns a new instance of Ext.util.Point base on the pageX / pageY values of the given event
  * @static
  * @param {Event} e The event
- * @returns {Ext.util.Point}
+ * @returns Ext.util.Point
  */
 Ext.util.Point.fromEvent = function(e) {
     var a = (e.changedTouches && e.changedTouches.length > 0) ? e.changedTouches[0] : e;

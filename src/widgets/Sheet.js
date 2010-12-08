@@ -39,11 +39,19 @@ Ext.Sheet = Ext.extend(Ext.Panel, {
     centered : false,
     floating : true,
     modal    : true,
-    hideOnMaskTap : false,
     draggable : false,
     monitorOrientation : true,
+    
     hidden    : true,
-
+    
+    /**
+    * @cfg {Boolean} hideOnMaskTap
+    * True to automatically bind a tap listener to the mask that hides the window.
+    * Defaults to false. Note: if you don't set this property to false you have to programmaticaly
+    * hide the overlay.
+    */
+    hideOnMaskTap : false,
+    
     /**
      * @cfg {Boolean} stretchX
      * If true, the width of anchored Sheets are adjusted to fill the entire top/bottom axis width,

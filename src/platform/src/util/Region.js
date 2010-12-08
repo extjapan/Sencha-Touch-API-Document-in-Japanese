@@ -344,7 +344,7 @@ Ext.util.Region.getRegion = function(el) {
 /**
  * @static
  * @param {Object} o An object with top, right, bottom, left properties
- * @returns {Ext.util.Region} region The region constructed based on the passed object
+ * @return {Ext.util.Region} region The region constructed based on the passed object
  */
 Ext.util.Region.from = function(o) {
     return new Ext.util.Region(o.top, o.right, o.bottom, o.left);

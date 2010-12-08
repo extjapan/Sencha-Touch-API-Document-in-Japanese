@@ -27,7 +27,7 @@
  * are mapped to the methods {@link #create}, {@link #read}, {@link #update} and {@link #destroy} respectively. Each Proxy subclass 
  * implements these functions.</p>
  * 
- * <p>The CRUD methods each expect an {@link Ext.data.Operation operation} object as the sole argument. The Operation encapsulates 
+ * <p>The CRUD methods each expect an {@link Ext.data.Operation Operation} object as the sole argument. The Operation encapsulates 
  * information about the action the Store wishes to perform, the {@link Ext.data.Model model} instances that are to be modified, etc.
  * See the {@link Ext.data.Operation Operation} documentation for more details. Each CRUD method also accepts a callback function to be 
  * called asynchronously on completion.</p>
@@ -48,13 +48,20 @@ Ext.data.Proxy = Ext.extend(Ext.util.Observable, {
     
     /**
      * @cfg {String} defaultReaderType The default registered reader type. Defaults to 'json'
+     * @private
      */
     defaultReaderType: 'json',
     
     /**
      * @cfg {String} defaultWriterType The default registered writer type. Defaults to 'json'
+     * @private
      */
     defaultWriterType: 'json',
+    
+    /**
+     * @cfg {String/Ext.data.Model} model The name of the Model to tie to this Proxy. Can be either the string name of
+     * the Model, or a reference to the Model constructor. Required.
+     */
     
     constructor: function(config) {
         config = config || {};
@@ -111,7 +118,9 @@ Ext.data.Proxy = Ext.extend(Ext.util.Observable, {
             };
         }
 
-        if (!(reader instanceof Ext.data.Reader)) {
+        if (reader instanceof Ext.data.Reader) {
+            reader.setModel(this.model);
+        } else {
             Ext.applyIf(reader, {
                 proxy: this,
                 model: this.model,

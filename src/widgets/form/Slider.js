@@ -7,7 +7,7 @@
 new Ext.form.FormPanel({
     items: [
         {
-            xtype   : 'slider',
+            xtype   : 'sliderfield',
             label   : 'Volume',
             value   : 5,
             minValue: 0,
@@ -27,7 +27,7 @@ var slider = new Ext.form.Slider({
 slider.setValue(8); //will update the value and move the thumb;
 slider.getValue(); //returns 8
    </code></pre>
- * @xtype slider
+ * @xtype sliderfield
  */
 Ext.form.Slider = Ext.extend(Ext.form.Field, {
     ui: 'slider',
@@ -183,6 +183,17 @@ Ext.form.Slider = Ext.extend(Ext.form.Field, {
 
             this.thumbs = thumbs;
         }
+    },
+
+    // @private
+    initValue: function() {
+        var thumb = this.getThumb();
+
+        if (thumb.dragObj) {
+            thumb.dragObj.updateBoundary();
+        }
+
+        Ext.form.Slider.superclass.initValue.apply(this, arguments);
     },
 
     onOrientationChange: function() {
@@ -442,7 +453,7 @@ Ext.form.Slider = Ext.extend(Ext.form.Field, {
 Ext.reg('sliderfield', Ext.form.Slider);
 
 //<deprecated since=1.0>
-Ext.reg('slider', Ext.form.Slider);
+Ext.reg('sliderfield', Ext.form.Slider);
 //</deprecated>
 /**
  * @class Ext.form.Slider.Thumb

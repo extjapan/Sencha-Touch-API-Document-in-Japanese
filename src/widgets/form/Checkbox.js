@@ -63,10 +63,8 @@ Ext.form.Checkbox = Ext.extend(Ext.form.Field, {
 
         if (this.fieldEl) {
             this.mon(this.fieldEl, {
-                tap: Ext.emptyFn,
                 click: this.onChange,
-                scope: this,
-                fireClickEvent: true
+                scope: this
             });
 
             this.setChecked(isChecked);
@@ -81,7 +79,7 @@ Ext.form.Checkbox = Ext.extend(Ext.form.Field, {
                 e = e.browserEvent;
             }
 
-            if (!e.isManufactured) {
+            if (!e.isSimulated) {
                 e.preventDefault();
                 e.stopPropagation();
                 return;

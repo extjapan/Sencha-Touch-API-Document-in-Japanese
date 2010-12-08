@@ -15,7 +15,7 @@ Ext.AbstractManager = Ext.extend(Object, {
          * @property all
          * @type Ext.util.MixedCollection
          */
-        this.all = new Ext.util.MixedCollection();
+        this.all = new Ext.util.HashMap();
 
         this.types = {};
     },
@@ -103,5 +103,30 @@ Ext.AbstractManager = Ext.extend(Object, {
                 all.un("add", fn, scope);
             }
         });
+    },
+    
+    /**
+     * Executes the specified function once for each item in the collection.
+     * Returning false from the function will cease iteration.
+     * 
+     * The paramaters passed to the function are:
+     * <div class="mdetail-params"><ul>
+     * <li><b>key</b> : String<p class="sub-desc">The key of the item</p></li>
+     * <li><b>value</b> : Number<p class="sub-desc">The value of the item</p></li>
+     * <li><b>length</b> : Number<p class="sub-desc">The total number of items in the collection</p></li>
+     * </ul></div>
+     * @param {Object} fn The function to execute.
+     * @param {Object} scope The scope to execute in. Defaults to <tt>this</tt>.
+     */
+    each: function(fn, scope){
+        this.all.each(fn, scope || this);    
+    },
+    
+    /**
+     * Gets the number of items in the collection.
+     * @return {Number} The number of items in the collection.
+     */
+    getCount: function(){
+        return this.all.getCount();
     }
 });

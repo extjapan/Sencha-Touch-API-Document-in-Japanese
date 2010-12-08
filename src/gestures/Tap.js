@@ -90,7 +90,7 @@ Ext.gesture.Tap = Ext.extend(Ext.gesture.Gesture, {
             var clickEvent = document.createEvent("MouseEvent");
                 clickEvent.initMouseEvent('click', e.bubbles, e.cancelable, document.defaultView, e.detail, e.screenX, e.screenY, e.clientX,
                                          e.clientY, e.ctrlKey, e.altKey, e.shiftKey, e.metaKey, e.metaKey, e.button, e.relatedTarget);
-                clickEvent.isManufactured = true;
+                clickEvent.isSimulated = true;
 
 
             target.dispatchEvent(clickEvent);

@@ -280,6 +280,7 @@ Ext.form.Text = Ext.extend(Ext.form.Field, {
             this.fireEvent('focus', this, e);
         }
 
+        Ext.currentlyFocusedField = this;
     },
 
     // @private
@@ -308,6 +309,8 @@ Ext.form.Text = Ext.extend(Ext.form.Field, {
         this.showMask();
 
         this.afterBlur();
+
+        Ext.currentlyFocusedField = null;
     },
 
     // @private

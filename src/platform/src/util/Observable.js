@@ -42,9 +42,8 @@ Ext.util.Observable = Ext.extend(Object, {
     * <br><p><b><u>ExtJs {@link Ext.Component コンポーネント}が発行するDOMイベント</u></b></p>
     * <br><p><i>一部の</i>ExtJsコンポーネントクラスでは特定のDOMイベント（例：click、mouseoverなど）を発行しますが、これは付加情報をあわせて
 		* 渡したい場合に限られています。例えば、 {@link Ext.DataView DataView}クラスの <b><code>{@link Ext.DataView#click click}</code></b>イベント
-		* ではクリックされたノードの情報が渡されます。コンポーネントを構成するエレメントそのもののDOMイベントを拾いたい場合は、明示的に指定する必要
-		* があります：
-
+		* ではクリックされたノードの情報が渡されます。コンポーネントを構成するエレメントそのもののDOMイベントを拾いたい場合は、<code>element</code>
+		* オプションでDOMリスナーを設定するコンポーネントのプロパティを特定する必要があります。
     * <pre><code>
 new Ext.Panel({
     width: 400,
@@ -78,7 +77,7 @@ new Ext.Panel({
             delete me.listeners;
         }
         me.events = me.events || {};
-        
+
         if (this.bubbleEvents) {
             this.enableBubble(this.bubbleEvents);
         }
@@ -101,7 +100,7 @@ new Ext.Panel({
         var me = this,
             managedListeners = me.managedListeners = me.managedListeners || [],
             config;
-        
+
         if (Ext.isObject(ename)) {
             options = ename;
             for (ename in options) {
@@ -122,11 +121,11 @@ new Ext.Panel({
                 scope: scope,
                 options: options
             });
-    
+
             item.on(ename, fn, scope, options);
         }
     },
-    
+
     /**
      * {@link #addManagedListener}メソッドで追加されたリスナーを削除するためのメソッド。
      * @param {Observable|Element} item リスナーを削除する対象
@@ -142,7 +141,7 @@ new Ext.Panel({
             managedListener,
             length,
             i;
-            
+
         if (Ext.isObject(ename)) {
             o = ename;
             for (ename in o) {
@@ -158,7 +157,7 @@ new Ext.Panel({
 
         managedListeners = this.managedListeners ? this.managedListeners.slice() : [];
         length = managedListeners.length;
-            
+
         for (i = 0; i < length; i++) {
             managedListener = managedListeners[i];
             if (managedListener.item === item && managedListener.ename === ename && (!fn || managedListener.fn === fn) && (!scope || managedListener.scope === scope)) {
@@ -167,7 +166,7 @@ new Ext.Panel({
             }
         }
     },
-    
+
     /**
      * <p>指定されたイベントを発行し、渡された引数からイベント名を除いたものをリスナーに渡します。
      * <p>イベントは{@link #enableBubble}メソッドを呼び出すことで、Observableオブジェクト間の階層構造を
@@ -213,7 +212,7 @@ new Ext.Panel({
 
     /**
      * イベントリスナーをこのオブジェクトに追加。
-     * @param {String}   eventName リスナーの対象となるイベント名
+     * @param {String}   eventName リスナーの対象となるイベント名、またはプロパティ名がイベント名であるオブジェクト。
      * @param {Function} handler イベント発行時に実行されるイベントリスナー関数
      * @param {Object}   scope オプション。イベントリスナーの実行時のスコープ（(<code><b>this</b></code>が参照するオブジェクト）。
      * <b>省略した場合、イベントを発行するオブジェクトがデフォルト値。</b>
@@ -228,7 +227,19 @@ new Ext.Panel({
 		 * 実行される。</div></li>
      * <li><b>target</b> : Observable<div class="sub-desc">ここで指定したオブジェクト上で発行された場合にのみイベントリスナーを実行。内包するObservable
 		 * オブジェクトから上がってきたイベントは無視。</div></li>
-     * <li><b>element</b> : String<div class="sub-desc">The element reference on the component to bind the event to. This is used to bind DOM events to underlying elements on {@link Ext.Component Components}. - This option is only valid for listeners bound to {@link Ext.Component Components}</div></li>
+     * <li><b>element</b> : String<div class="sub-desc"><b>このオプションは{@link Ext.Component コンポーネント}に対してのみ有効です。</b>
+     * ここにはイベントリスナーを追加する対象となるDOM要素（Element)を参照するコンポーネントのプロパティ名をしていします。
+     * <p>このオプションは {@link Ext.Component コンポーネント}が描画されるまで存在しないようなDOM要素に対して、コンポーネントの生成中にDOMイベントリスナーを
+		 * 設定するときに便利なオプションです。例えば、Panelのbodyに対してクリックリスナーを設定したい場合：<pre><code>
+new Ext.Panel({
+    title: 'The title',
+    listeners: {
+        click: this.handlePanelClick,
+        element: 'body'
+    }
+});
+</code></pre></p>
+     * <p>上記の方法で設定した場合、利用可能なオプションは{@link Ext.Element#addListener}で利用可能なオプションと同じものとなります。</p></div></li>
      * </ul><br>
      * <p>
      * <b>オプションの組み合わせ</b><br>
@@ -236,13 +247,21 @@ new Ext.Panel({
      * <br>
      * 遅延実行、一度だけ実行されるリスナー。
      * <pre><code>
-myPanel.on('hide', this.onClick, this, {
+myPanel.on('hide', this.handleClick, this, {
 single: true,
 delay: 100
 });</code></pre>
      * <p>
      * <b>複数のイベントリスナーを1度に追加</b><br>
      * このメソッドではイベント名をプロパティとして持つオブジェクトを引数として受け取り、一度に複数のイベントリスナーを設定することも可能です。
+     * For example:<pre><code>
+myGridPanel.on({
+    cellClick: this.onCellClick,
+    mouseover: this.onMouseOver,
+    mouseout: this.onMouseOut,
+    scope: this // 重要。イベントリスナー実行時のthisを明示的に指定。
+});
+</code></pre>.
      * <p>
      */
     addListener: function(ename, fn, scope, o) {
@@ -322,10 +341,10 @@ delay: 100
                 ev.clearListeners();
             }
         }
-        
+
         this.clearManagedListeners();
     },
-    
+
     //<debug>
     purgeListeners : function() {
         console.warn('MixedCollection: purgeListeners has been deprecated. Please use clearListeners.');

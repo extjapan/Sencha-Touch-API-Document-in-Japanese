@@ -77,7 +77,7 @@ Ext.form.Field = Ext.extend(Ext.Component,  {
                 '<tpl if="autoCorrect">autocorrect="{autoCorrect}" </tpl> />',
             '<tpl if="useMask"><div class="x-field-mask"></div></tpl>',
             '</div>',
-            '<tpl if="useClearIcon"><div class="x-field-clear-container"><div class="x-field-clear x-hidden-visibility">&#215;</div><div></tpl>',
+            '<tpl if="useClearIcon"><div class="x-field-clear-container"><div class="x-field-clear x-hidden-visibility">&#215;</div></div></tpl>',
         '</tpl>'
     ],
 
@@ -204,19 +204,10 @@ Ext.form.Field = Ext.extend(Ext.Component,  {
         
         if (this.fieldEl) {
             if (this.useMask && this.mask) {
-                if (Ext.is.iOS) {
-                    this.mon(this.mask, {
-                        tap: Ext.emptyFn,
-                        click: this.onMaskTap,
-                        fireClickEvent: true,
-                        scope: this
-                    });
-                } else {
-                    this.mon(this.mask, {
-                        tap: this.onMaskTap,
-                        scope: this
-                    });
-                }
+                this.mon(this.mask, {
+                    tap: this.onMaskTap,
+                    scope: this
+                });
             }
         }
     },
@@ -304,7 +295,8 @@ Ext.form.Field = Ext.extend(Ext.Component,  {
             return false;
         }
 
-        if (Ext.is.iOS && e.browserEvent && !e.browserEvent.isManufactured) {
+        if (Ext.is.iOS && e.browserEvent && !e.browserEvent.isSimulated && !e.browserEvent.isSimulated) {
+            console.log('onMaskTap prevented');
             e.preventDefault();
             e.stopPropagation();
             return false;

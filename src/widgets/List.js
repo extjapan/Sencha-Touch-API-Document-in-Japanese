@@ -88,10 +88,11 @@ Ext.List = Ext.extend(Ext.DataView, {
 
     /**
      * @cfg {Boolean} pinHeaders
-     * Whether or not to pin headers on top of item groups while scrolling for an iPhone native list experience
-     * Defaults to <tt>true</tt>
+     * Whether or not to pin headers on top of item groups while scrolling for an iPhone native list experience.
+     * Defaults to <tt>false</tt> on Android and Blackberry (for performance reasons)
+     * Defaults to <tt>true</tt> on other devices.
      */
-    pinHeaders: (Ext.is.Android || Ext.is.Blackberry) ? false : true,
+    pinHeaders: Ext.is.iOS || Ext.is.Desktop,
 
     /**
      * @cfg {Boolean/Object} indexBar
@@ -192,6 +193,12 @@ var store = new Ext.data.JsonStore({
      * and is useful when you want to change the scope of the handler.
      */
     onItemDisclosure: false,
+    
+    /**
+     * @cfg {Boolean} preventSelectionOnDisclose True to prevent the item selection when the user
+     * taps a disclose icon. Defaults to <tt>true</tt>
+     */
+    preventSelectionOnDisclose: true,
 
     // @private
     initComponent : function() {
@@ -320,6 +327,7 @@ var store = new Ext.data.JsonStore({
               * @param {Ext.data.Record} record The record associated with the item
               * @param {Ext.Element} node The wrapping element of this node
               * @param {Number} index The index of this list item
+              * @param {Ext.util.Event} e The tap event that caused this disclose to fire
               */
              'disclose'
          );
@@ -402,8 +410,10 @@ var store = new Ext.data.JsonStore({
         if (node) {
             record = this.getRecord(node);
             index  = this.indexOf(node);
-     
-            this.fireEvent('disclose', record, node, index);
+            if (this.preventSelectionOnDisclose) {
+                e.stopEvent();
+            }
+            this.fireEvent('disclose', record, node, index, e);
      
             if (Ext.isObject(this.onItemDisclosure) && this.onItemDisclosure.handler) {
                 this.onItemDisclosure.handler.call(this, record, node, index);
@@ -518,7 +528,7 @@ var store = new Ext.data.JsonStore({
         }
         if (this.closest.next && pos.y > 0 && this.closest.next.offset - pos.y <= this.headerHeight) {
             var transform = this.headerHeight - (this.closest.next.offset - pos.y);
-            Ext.Element.cssTransform(this.header, {translate: [0, -transform]});
+            Ext.Element.cssTranslate(this.header, {x: 0, y: -transform});
             this.transformed = true;
         }
         else if (this.transformed) {

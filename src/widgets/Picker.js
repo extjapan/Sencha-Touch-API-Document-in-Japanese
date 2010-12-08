@@ -415,9 +415,8 @@ Ext.Picker.Slot = Ext.extend(Ext.DataView, {
             useIndicators: false,
             friction: 0.7,
             acceleration: 25,
-            snapDuration: 150,
-            animationDuration: 150,
-            eventTarget: 'parent'
+            snapDuration: 200,
+            animationDuration: 200
         };
 
         this.tpl = new Ext.XTemplate([

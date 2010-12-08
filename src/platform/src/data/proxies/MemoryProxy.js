@@ -3,14 +3,16 @@
  * @class Ext.data.MemoryProxy
  * @extends Ext.data.ClientProxy
  * 
- * <p>In-memory proxy. This proxy simply uses a local variable for data storage/retrieval, so its contents are
- * lost on every page refresh. Usually this Proxy isn't used directly, serving instead as a helper to a 
- * {@link Ext.data.Store Store} where a reader is required to load data. For example, say we have a Store for
- * a User model and have some inline data we want to load, but this data isn't in quite the right format: we 
- * can use a MemoryProxy with a JsonReader to read it into our Store:</p>
+ * <p>In-memory proxy. This proxy simply uses a local variable for data storage/retrieval, so its contents are lost on
+ * every page refresh.</p>
+ * 
+ * <p>Usually this Proxy isn't used directly, serving instead as a helper to a {@link Ext.data.Store Store} where a 
+ * reader is required to load data. For example, say we have a Store for a User model and have some inline data we want
+ * to load, but this data isn't in quite the right format: we can use a MemoryProxy with a JsonReader to read it into 
+ * our Store:</p>
  * 
 <pre><code>
-//this is the model we'll be using in the store
+//this is the model we will be using in the store
 Ext.regModel('User', {
     fields: [
         {name: 'id',    type: 'int'},
@@ -19,7 +21,7 @@ Ext.regModel('User', {
     ]
 });
 
-//this data doesn't line up to our model fields - the phone field is called phoneNumber
+//this data does not line up to our model fields - the phone field is called phoneNumber
 var data = {
     users: [
         {

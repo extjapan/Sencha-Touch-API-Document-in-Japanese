@@ -2,6 +2,7 @@ Ext.applyIf(Ext.Element, {
     
     /**
      * Returns the calculated CSS 2D transform offset values (translate x and y)
+     * @static
      * @param {Ext.Element/Element} el the element
      * @return {Ext.util.Offset} instance of Ext.util.Offset, with x and y properties
      */
@@ -23,6 +24,7 @@ Ext.applyIf(Ext.Element, {
 
     /**
      * Transform an element using CSS 3
+     * @static
      * @param {Ext.Element/Element} el the element
      * @param {Object} transforms an object with all transformation to be applied. The keys are transformation method names,
      * the values are arrays of params or a single number if there's only one param e.g:

@@ -3,7 +3,7 @@
  * @class Ext.data.ArrayReader
  * @extends Ext.data.JsonReader
  * 
- * <p>Data reader class to create an Array of {@link Ext.data.Record} objects from an Array.
+ * <p>Data reader class to create an Array of {@link Ext.data.Model} objects from an Array.
  * Each element of that Array represents a row of data fields. The
  * fields are pulled into a Record object using as a subscript, the <code>mapping</code> property
  * of the field definition if it exists, or the field's ordinal position in the definition.</p>
@@ -11,12 +11,16 @@
  * <p><u>Example code:</u></p>
  * 
 <pre><code>
-var Employee = Ext.data.Record.create([
-    {name: 'name', mapping: 1},         // "mapping" only needed if an "id" field is present which
-    {name: 'occupation', mapping: 2}    // precludes using the ordinal position as the index.
-]);
+var Employee = Ext.regModel('Employee', {
+    fields: [
+        'id',
+        {name: 'name', mapping: 1},         // "mapping" only needed if an "id" field is present which
+        {name: 'occupation', mapping: 2}    // precludes using the ordinal position as the index.        
+    ]
+});
+
 var myReader = new Ext.data.ArrayReader({
-    {@link #idIndex}: 0
+    model: 'Employee'
 }, Employee);
 </code></pre>
  * 
@@ -29,10 +33,6 @@ var myReader = new Ext.data.ArrayReader({
  * @constructor
  * Create a new ArrayReader
  * @param {Object} meta Metadata configuration options.
- * @param {Array/Object} recordType
- * <p>Either an Array of {@link Ext.data.Field Field} definition objects (which
- * will be passed to {@link Ext.data.Record#create}, or a {@link Ext.data.Record Record}
- * constructor created from {@link Ext.data.Record#create}.</p>
  */
 Ext.data.ArrayReader = Ext.extend(Ext.data.JsonReader, {
 

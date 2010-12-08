@@ -64,14 +64,7 @@ var panel = new Ext.Panel({
  */
 Ext.Panel = Ext.extend(Ext.lib.Panel, {
     // inherited
-    scroll: false,
-
-    /**
-     * @cfg {Boolean} fullscreen
-     * Force the component to take up 100% width and height available. Defaults to false.
-     * Setting this configuration immediately sets the monitorOrientation config to true.
-     */
-    fullscreen: false
+    scroll: false
 });
 
 Ext.reg('panel', Ext.Panel);

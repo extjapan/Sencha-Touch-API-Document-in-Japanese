@@ -6,11 +6,11 @@ Ext.apply(Ext, {
      * The version of the framework
      * @type String
      */
-    version : '1.0.0',
+    version : '1.0.1',
     versionDetail : {
         major : 1,
         minor : 0,
-        patch : 0
+        patch : 1
     },
     
     /**
@@ -41,8 +41,8 @@ Ext.apply(Ext, {
 
             if (Ext.isFunction(config.onReady)) {
                 var me = this;
-                
-              Ext.onReady(function() {
+
+                Ext.onReady(function() {
                     var args = arguments;
 
                     if (config.fullscreen !== false) {
@@ -215,88 +215,61 @@ function(el){
 
 Ext.Viewport = new (Ext.extend(Ext.util.Observable, {
     constructor: function() {
+        var me = this;
+        
         this.addEvents(
             'orientationchange',
             'resize'
         );
+            
+        this.stretchSizes = {};
 
         if (Ext.supports.OrientationChange) {
-            window.addEventListener('orientationchange', Ext.createDelegate(this.onOrientationChange, this), false);
+            window.addEventListener('orientationchange', Ext.createDelegate(me.onOrientationChange, me), false);
         }
         else {
-            window.addEventListener('resize', Ext.createDelegate(this.onResize, this), false);
+            window.addEventListener('resize', Ext.createDelegate(me.onResize, me), false);
         }
 
         if (!Ext.desktop) {
-            document.addEventListener('touchstart', Ext.createDelegate(this.onTouchStartCapturing, this), true);
-            document.addEventListener('touchmove', Ext.createDelegate(this.onTouchMoveBubbling, this), false);
+            document.addEventListener('touchstart', Ext.createDelegate(me.onTouchStartCapturing, me), true);
         }
-        
-        this.stretchSizes = {};
     },
 
     init: function(fn) {
         var me = this,
-            stretchSize = Math.max(window.innerHeight, window.innerWidth) * 2;
+            stretchSize = Math.max(window.innerHeight, window.innerWidth) * 2,
+            body = Ext.getBody();
 
         me.updateOrientation();
 
-        if (!Ext.is.Desktop) {
-            me.stretchEl = Ext.getBody().createChild({
-                cls: 'x-body-stretcher',
-                style: 'height: ' + stretchSize + 'px; width:' + (Ext.is.Android ? stretchSize + 'px' : '1px')
-            });
-        }
+        this.initialHeight = window.innerHeight;
+        this.initialOrientation = this.orientation;
+
+        body.setHeight(stretchSize);
+        this.scrollToTop();
 
         setTimeout(function() {
             me.scrollToTop();
+            me.initialHeight = Math.max(me.initialHeight, window.innerHeight);
+            
+            fn();
 
-            setTimeout(function() {
-
-                Ext.getBody().setStyle('overflow', 'hidden');
-
-                if (Ext.is.Android && me.stretchEl) {
-                    me.stretchEl.remove();
-                    delete me.stretchEl;
-                }
-
-                if (fn) {
-                    setTimeout(function() {
-                        fn();
-
-                        if (!Ext.is.Android) {
-                            me.updateBodySize();
-                        }
-                    }, 500);
-                }
-            }, 200);
+            me.updateBodySize();
         }, 500);
-
-        if (!Ext.is.Android) {
-            this.on('orientationchange', function() {
-                if (Ext.currentlyFocusedField) {
-                    Ext.currentlyFocusedField.blur();
-                }
-            });
-        }
     },
 
-    showStretchEl: function() {
-        if (!Ext.is.Android && this.stretchEl) {
-            this.stretchEl.setStyle('display', 'block');
+    scrollToTop: function() {
+        if (Ext.is.iOS) {
+            document.body.scrollTop = document.body.scrollHeight;
         }
-    },
-
-    hideStretchEl: function() {
-        if (!Ext.is.Android && this.stretchEl) {
-            this.stretchEl.setStyle('display', 'none');
+        else {
+            window.scrollTo(0, 1);
         }
     },
 
     updateBodySize: function() {
-        // Why Ext.getBody() is undefined in here? WTF!
-        document.body.style.width = window.innerWidth + 'px';
-        document.body.style.height = window.innerHeight + 'px';
+        Ext.getBody().setSize(window.innerWidth, window.innerHeight);
     },
     
     updateOrientation: function() {
@@ -305,56 +278,40 @@ Ext.Viewport = new (Ext.extend(Ext.util.Observable, {
     },
 
     onTouchStartCapturing: function(e) {
-        var target = e.target;
-
-        if (!Ext.currentlyFocusedField && !Ext.is.Android) {
+        if (!Ext.currentlyFocusedField && Ext.is.iOS) {
             this.scrollToTop();
         }
-
-        if (Ext.is.Android) {
-            if (target.nodeType == 3) {
-                target = target.parentNode;
-            }
-            
-            if (target.tagName && (/input|select|textarea/i.test(target.tagName))) {
-                return;
-            }
-
-            e.preventDefault();
-            e.stopPropagation();
-        }
-    },
-
-
-    onTouchMoveBubbling: function(e) {
-        e.preventDefault();
-        e.stopPropagation();
     },
 
     onOrientationChange: function() {
-        var me = this;
+        var me = this,
+            body = Ext.getBody();
+
+        body.setHeight(body.getWidth());
 
         this.updateOrientation();
 
         this.fireEvent('orientationchange', this, this.orientation);
 
-        if (!Ext.is.Android) {
-            this.scrollToTop(1, function() {
-                me.updateBodySize();
-                me.fireResizeEvent();
-            }, true);
-        } else {
-            this.scrollToTop(100, function() {
-                me.fireResizeEvent();
-            });
-        }
+//        if (Ext.is.iOS) {
+            setTimeout(function() {
+                me.scrollToTop();
+                setTimeout(function() {
+                    me.updateBodySize();
+                    me.fireResizeEvent();
+                }, 100);
+            }, 100);
+//        } else {
+//            me.scrollToTop();
+//            me.updateBodySize();
+//            me.fireResizeEvent();
+//        }
     },
 
     fireResizeEvent: function() {
         var me = this;
-        var size = me.getSize();
 
-        if (Ext.is.Android) {
+        if (!Ext.is.iOS) {
             if (this.resizeEventTimer) {
                 clearTimeout(this.resizeEventTimer);
             }
@@ -373,7 +330,7 @@ Ext.Viewport = new (Ext.extend(Ext.util.Observable, {
         } else {
             var size = this.getSize();
 
-            if (Ext.is.Android) {
+            if (!Ext.is.iOS) {
                 if ((size.width == this.lastSize.width && size.height > this.lastSize.height) ||
                     (size.height == this.lastSize.height && size.width > this.lastSize.width)) {
                     this.fireEvent('resize', this, size);
@@ -387,7 +344,9 @@ Ext.Viewport = new (Ext.extend(Ext.util.Observable, {
     getSize: function() {
         return {
             width: window.innerWidth,
-            height: window.innerHeight
+            height: (this.orientation == this.initialOrientation) ? 
+                        Math.max(this.initialHeight, window.innerHeight) :
+                        window.innerHeight
         };
     },
 
@@ -397,23 +356,22 @@ Ext.Viewport = new (Ext.extend(Ext.util.Observable, {
             y: window.pageYOffset
         };
     },
-
-    scrollToTop: function(delay, fn) {
-        if (delay) {
-            setTimeout(function() {
-                window.scrollTo(0, Ext.is.Android ? -1 : 0);
-                if (fn) {
-                    setTimeout(fn, 0);
-                }
-            }, delay);
-        }
-        else {
-            window.scrollTo(0, Ext.is.Android ? -1 : 0);
-            if (fn) {
-                setTimeout(fn, 0);
-            }
-        }
-    },
+//
+//    scrollToTop: function(delay, fn) {
+//        return;
+//        var callback = function() {
+//            document.body.scrollTop = document.body.offsetHeight;
+//            if (fn) {
+//                fn();
+//            }
+//        };
+//
+//        if (delay) {
+//            setTimeout(callback, delay);
+//        } else {
+//            callback();
+//        }
+//    },
     
     getOrientation: function() {
         var size = this.getSize();
@@ -422,7 +380,7 @@ Ext.Viewport = new (Ext.extend(Ext.util.Observable, {
             return (window.orientation == 0 || window.orientation == 180) ? 'portrait' : 'landscape';
         }
         else {
-            if (Ext.is.Android) {
+            if (!Ext.is.iOS) {
                 if ((size.width == this.lastSize.width && size.height < this.lastSize.height) ||
                     (size.height == this.lastSize.height && size.width < this.lastSize.width)) {
                     return this.orientation;
@@ -463,6 +421,9 @@ Ext.Viewport = new (Ext.extend(Ext.util.Observable, {
         }
         if (Is.Android) {
             cls.push('x-android');
+        }
+        if (Is.Blackberry) {
+            cls.push('x-bb');
         }
         if (Is.Standalone) {
             cls.push('x-standalone');

@@ -90,6 +90,21 @@ Ext.util.Draggable = Ext.extend(Ext.util.Observable, {
     proxy: null,
     stack: false,
 
+    /**
+     * How long animations for this draggable take by default when using setOffset with animate being true.
+     * Defaults to 300.
+     * @type Number
+     */
+    animationDuration: 300,
+
+    /**
+     * Whether or not to automatically re-calculate the Scroller's and its container's size on every
+     * touchstart.
+     * Defaults to false
+     * @type Boolean
+     */
+    updateBoundaryOnTouchStart: true,
+
     // Properties
     /**
      * Read-only Property representing the region that the Draggable
@@ -118,13 +133,6 @@ Ext.util.Draggable = Ext.extend(Ext.util.Observable, {
      * @type Boolean
      */
     horizontal: false,
-
-    /**
-     * How long animations for this draggable take by default when using setOffset with animate being true.
-     * This defaults to 300.
-     * @type Number
-     */
-    animationDuration: 300,
 
     // @private
     monitorOrientation: true,
@@ -263,7 +271,7 @@ Ext.util.Draggable = Ext.extend(Ext.util.Observable, {
 
             if (useCssTransform == false) {
                 this.setStyleOffset(this.offset);
-                this.setTransformOffset(resetOffset);
+                this.setTransformOffset(resetOffset, true);
             } else {
                 this.setTransformOffset(this.offset);
                 this.setStyleOffset(resetOffset);
@@ -290,27 +298,36 @@ Ext.util.Draggable = Ext.extend(Ext.util.Observable, {
             offset.y = 0;
         }
 
-        if (animate) {
-            this.startAnimation(offset, animate);
+        if (!(offset instanceof Ext.util.Offset)) {
+            offset = Ext.util.Offset.fromObject(offset);
         }
-        else {
-            this.offset = offset;
-            this.region = new Ext.util.Region(
-                this.initialRegion.top + offset.y,
-                this.initialRegion.right + offset.x,
-                this.initialRegion.bottom + offset.y,
-                this.initialRegion.left + offset.x
-            );
+        
+        offset.round();
 
-            if (this.useCssTransform) {
-                this.setTransformOffset(offset);
+        if (!this.offset.equals(offset)) {
+            if (animate) {
+                this.startAnimation(offset, animate);
             }
             else {
-                this.setStyleOffset(offset);
-            }
+                this.offset = offset;
+                this.region = new Ext.util.Region(
+                    this.initialRegion.top + offset.y,
+                    this.initialRegion.right + offset.x,
+                    this.initialRegion.bottom + offset.y,
+                    this.initialRegion.left + offset.x
+                );
 
-            this.fireEvent('offsetchange', this, this.offset);
+                if (this.useCssTransform) {
+                    this.setTransformOffset(offset);
+                }
+                else {
+                    this.setStyleOffset(offset);
+                }
+
+                this.fireEvent('offsetchange', this, this.offset);
+            }
         }
+
 
         return this;
     },
@@ -322,10 +339,14 @@ Ext.util.Draggable = Ext.extend(Ext.util.Observable, {
      * @return {Ext.util.Draggable} this This Draggable instance
      * @private
      */
-    setTransformOffset: function(offset) {
+    setTransformOffset: function(offset, clean) {
 //        Ext.Element.cssTransform(this.getProxyEl(), {translate: [offset.x, offset.y]});
         // Temporarily use this instead of Ext.Element.cssTransform to save some CPU
-        Ext.Element.cssTranslate(this.getProxyEl(), offset);
+        if (clean) {
+            this.getProxyEl().dom.style.webkitTransform = '';
+        } else {
+            Ext.Element.cssTranslate(this.getProxyEl(), offset);
+        }
 
         return this;
     },
@@ -541,7 +562,9 @@ Ext.util.Draggable = Ext.extend(Ext.util.Observable, {
      * @private
      */
     onStart: function(e) {
-        this.updateBoundary();
+        if (this.updateBoundaryOnTouchStart) {
+            this.updateBoundary();
+        }
 
         this.stopAnimation();
 
@@ -550,10 +573,9 @@ Ext.util.Draggable = Ext.extend(Ext.util.Observable, {
         }
 
         this.setDragging(true);
+        this.startTouchPoint = new Ext.util.Point(e.startX, e.startY);
 
-        this.startTouchPoint = Ext.util.Point.fromEvent(e);
         this.startOffset = this.offset.copy();
-
 
         this.fireEvent('dragstart', this, e);
 

@@ -126,6 +126,91 @@ Ext.regModel('User', {
 });
 </code></pre>
  * 
+ * <p><u>Using a Proxy</u></p>
+ * 
+ * <p>Models are great for representing types of data and relationships, but sooner or later we're going to want to 
+ * load or save that data somewhere. All loading and saving of data is handled via a {@link Ext.data.Proxy Proxy}, 
+ * which can be set directly on the Model:</p>
+ * 
+<pre><code>
+Ext.regModel('User', {
+    fields: ['id', 'name', 'email'],
+
+    proxy: {
+        type: 'rest',
+        url : '/users'
+    }
+});
+</code></pre>
+ * 
+ * <p>Here we've set up a {@link Ext.data.RestProxy Rest Proxy}, which knows how to load and save data to and from a 
+ * RESTful backend. Let's see how this works:</p>
+ * 
+<pre><code>
+var user = Ext.ModelMgr.create({name: 'Ed Spencer', email: 'ed@sencha.com'}, 'User');
+
+user.save(); //POST /users
+</code></pre>
+ * 
+ * <p>Calling {@link #save} on the new Model instance tells the configured RestProxy that we wish to persist this 
+ * Model's data onto our server. RestProxy figures out that this Model hasn't been saved before because it doesn't
+ * have an id, and performs the appropriate action - in this case issuing a POST request to the url we configured
+ * (/users). We configure any Proxy on any Model and always follow this API - see {@link Ext.data.Proxy} for a full
+ * list.</p>
+ * 
+ * <p>Loading data via the Proxy is equally easy:</p>
+ * 
+<pre><code>
+//get a reference to the User model class
+var User = Ext.ModelMgr.getModel('User');
+
+//Uses the configured RestProxy to make a GET request to /users/123
+User.load(123, {
+    success: function(user) {
+        console.log(user.getId()); //logs 123
+    }
+});
+</code></pre>
+ * 
+ * <p>Models can also be updated and destroyed easily:</p>
+ * 
+<pre><code>
+//the user Model we loaded in the last snippet:
+user.set('name', 'Edward Spencer');
+
+//tells the Proxy to save the Model. In this case it will perform a PUT request to /users/123 as this Model already has an id
+user.save({
+    success: function() {
+        console.log('The User was updated');
+    }
+});
+
+//tells the Proxy to destroy the Model. Performs a DELETE request to /users/123
+user.destroy({
+    success: function() {
+        console.log('The User was destroyed!');
+    }
+});
+</code></pre>
+ * 
+ * <p><u>Usage in Stores</u></p>
+ * 
+ * <p>It is very common to want to load a set of Model instances to be displayed and manipulated in the UI. We do this 
+ * by creating a {@link Ext.data.Store Store}:</p>
+ * 
+<pre><code>
+var store = new Ext.data.Store({
+    model: 'User'
+});
+
+//uses the Proxy we set up on Model to load the Store data
+store.load();
+</code></pre>
+ * 
+ * <p>A Store is just a collection of Model instances - usually loaded from a server somewhere. Store can also maintain
+ * a set of added, updated and removed Model instances to be synchronized with the server via the Proxy. See the
+ * {@link Ext.data.Store Store docs} for more information on Stores.</p>
+ * 
  * @constructor
  * @param {Object} data An object containing keys corresponding to this model's fields, and their associated values
  * @param {Number} id Optional unique ID to assign to this model instance
@@ -184,6 +269,7 @@ Ext.data.Model = Ext.extend(Ext.util.Stateful, {
         }
         
         this.set(data);
+        this.dirty = false;
         
         if (this.getId()) {
             this.phantom = false;
@@ -240,18 +326,19 @@ Ext.data.Model = Ext.extend(Ext.util.Stateful, {
      * @return {Ext.data.Model} The Model instance
      */
     save: function(options) {
-        var action = this.phantom ? 'create' : 'update';
+        var me     = this,
+            action = me.phantom ? 'create' : 'update';
         
         options = options || {};
         
         Ext.apply(options, {
-            records: [this],
+            records: [me],
             action : action
         });
         
         var operation  = new Ext.data.Operation(options),
-            successCb  = options.success,
-            failureCb  = options.failure,
+            successFn  = options.success,
+            failureFn  = options.failure,
             callbackFn = options.callback,
             scope      = options.scope,
             record;
@@ -260,14 +347,17 @@ Ext.data.Model = Ext.extend(Ext.util.Stateful, {
             record = operation.getRecords()[0];
             
             if (operation.wasSuccessful()) {
+                //we need to make sure we've set the updated data here. Ideally this will be redundant once the
+                //ModelCache is in place
+                me.set(record.data);
                 record.dirty = false;
 
-                if (typeof successCb == 'function') {
-                    successCb.call(scope, record, operation);
+                if (typeof successFn == 'function') {
+                    successFn.call(scope, record, operation);
                 }
             } else {
-                if (typeof failureCb == 'function') {
-                    failureCb.call(scope, record, operation);
+                if (typeof failureFn == 'function') {
+                    failureFn.call(scope, record, operation);
                 }
             }
             
@@ -276,9 +366,9 @@ Ext.data.Model = Ext.extend(Ext.util.Stateful, {
             }
         };
         
-        this.getProxy()[action](operation, callback, this);
+        me.getProxy()[action](operation, callback, me);
         
-        return this;
+        return me;
     },
     
     /**
@@ -377,7 +467,7 @@ Ext.apply(Ext.data.Model, {
     },
     
     /**
-     * Asynchronously loads a model instance by id. Sample usage:
+     * <b>Static</b>. Asynchronously loads a model instance by id. Sample usage:
 <pre><code>
 MyApp.User = Ext.regModel('User', {
     fields: [
@@ -401,6 +491,9 @@ MyApp.User.load(10, {
 </code></pre>
      * @param {Number} id The id of the model to load
      * @param {Object} config Optional config object containing success, failure and callback functions, plus optional scope
+     * @member Ext.data.Model
+     * @method load
+     * @static
      */
     load: function(id, config) {
         config = Ext.applyIf(config || {}, {
@@ -410,8 +503,8 @@ MyApp.User.load(10, {
         
         var operation  = new Ext.data.Operation(config),
             callbackFn = config.callback,
-            successCb  = config.success,
-            failureCb  = config.failure,
+            successFn  = config.success,
+            failureFn  = config.failure,
             scope      = config.scope,
             record, callback;
         
@@ -419,12 +512,12 @@ MyApp.User.load(10, {
             record = operation.getRecords()[0];
             
             if (operation.wasSuccessful()) {
-                if (typeof successCb == 'function') {
-                    successCb.call(scope, record, operation);
+                if (typeof successFn == 'function') {
+                    successFn.call(scope, record, operation);
                 }
             } else {
-                if (typeof failureCb == 'function') {
-                    failureCb.call(scope, record, operation);
+                if (typeof failureFn == 'function') {
+                    failureFn.call(scope, record, operation);
                 }
             }
             

@@ -15,6 +15,10 @@
  * 参照してください。</p>
  * <p>全てのコンポーネントには、それを特定するためのxtypeというものが設定されています。また、xtypeを調べるための
  * {@link #getXType}や{@link #isXType}といったメソッドも用意されています。予め定義されているxtypeは以下の通りです：</p>
+ * <h2>便利なプロパティ</h2>
+ * <ul class="list">
+ *   <li>{@link #fullscreen}</li>
+ * </ul>
  * <pre>
 xtype            クラス
 -------------    ------------------
@@ -116,7 +120,26 @@ Ext.Component = Ext.extend(Ext.lib.Component, {
      *
 		 * スクロールを可能にするとmonitorOrieantaionオプションは自動的にtrueに設定されます（{@link Ext.Panel Panel}クラス）
      */
+     
+     /**
+      * @cfg {Boolean} fullscreen
+			* 画面の全ての幅と高さをこのコンポーネントで占有します。デフォルト値はfalse。
+			* このオプションをtrueに設定するとmonitorOrientationも自動的にtrueになります。
+			* また、このオプションtrueに設定すると、コンポーネントは即時に描画されます。
+      */
+    fullscreen: false,
 
+    /**
+     * @cfg {Boolean} layoutOnOrientationChange
+		 * このオプションをtrueに設定することで、端末の向きが変わった際に自動的に再レイアウトを行います。
+		 * コンポーネントがfloatingの場合は明示的にfalseに設定しない限り、このオプションのデフォルト値は
+		 * trueです。また、コンポーネントがfullscreen設定されたコンテナに内包されている場合は、このオプ
+		 * ションを設定する必要はありません。fullscreenのコンポーネントは端末の向きの変化に合わせて
+		 * 自動的に再レイアウトされるようになっています。
+     * デフォルト値は<code>null</code>
+     */
+    layoutOnOrientationChange: null,
+    
     // @private
     initComponent : function() {
         this.addEvents(
@@ -148,8 +171,9 @@ Ext.Component = Ext.extend(Ext.lib.Component, {
         }
 
         if (this.fullscreen) {
-            this.width = window.innerWidth;
-            this.height = window.innerHeight;
+            var viewportSize = Ext.Viewport.getSize();
+            this.width = viewportSize.width;
+            this.height = viewportSize.height;
             this.cls = (this.cls || '') + ' x-fullscreen';
             this.renderTo = document.body;
         }
@@ -468,8 +492,9 @@ Ext.Component = Ext.extend(Ext.lib.Component, {
             if (this.modal) {
                 this.el.parent().mask(null, 'x-mask-gray');
             }
+
             if (this.hideOnMaskTap) {
-                Ext.getDoc().on('touchstart', this.onFloatingTouchStart, this, {capture: true});
+                Ext.getDoc().on('touchstart', this.onFloatingTouchStart, this, {capture: true, subsequent: true});
             }
         }
         
@@ -486,17 +511,12 @@ Ext.Component = Ext.extend(Ext.lib.Component, {
     },
 
     // @private
-    onFloatingTouchStart : function(e, t) {
-        var doc = Ext.getDoc();
-        if (!this.el.contains(t)) {
-            doc.on('touchend', function(e) {
-                this.hide();
-                if (this.stopMaskTapEvent || Ext.fly(t).hasCls('x-mask')) {
-                    e.stopEvent();
-                }
-            }, this, {single: true, capture: true});
-
-            e.stopEvent();
+    onFloatingTouchStart: function(e) {
+        if (!this.el.contains(e.target)) {
+            this.hide();
+            if (this.stopMaskTapEvent || Ext.fly(e.target).hasCls('x-mask')) {
+                e.stopEvent();
+            }
         }
     },
 
@@ -507,7 +527,7 @@ Ext.Component = Ext.extend(Ext.lib.Component, {
         }
 
         if (this.hideOnMaskTap && this.floating) {
-            Ext.getDoc().un('touchstart', this.onFloatingTouchStart, this);
+            Ext.getDoc().un('touchstart', this.onFloatingTouchStart, this, {capture: true, subsequent: true});
         }
 
         if (animation) {
@@ -597,6 +617,9 @@ Ext.Component = Ext.extend(Ext.lib.Component, {
             }
         }
         else if (floating !== false) {
+            if (this.layoutOnOrientationChange !== false) {
+                this.layoutOnOrientationChange = true;
+            }
             this.autoRender = true;
         }
     },
@@ -622,7 +645,7 @@ Ext.Component = Ext.extend(Ext.lib.Component, {
                 if (this.dragObj) {
                     this.dragObj.enable();
                 } else {
-                    this.dragObj = new Ext.util.Draggable(this.el, Ext.apply({}, this.isDraggable || {}));
+                    this.dragObj = new Ext.util.Draggable(this.el, Ext.apply({}, this.draggable || {}));
                     this.relayEvents(this.dragObj, ['dragstart', 'beforedragend' ,'drag', 'dragend']);
                 }
             }
@@ -647,6 +670,9 @@ Ext.Component = Ext.extend(Ext.lib.Component, {
 
             if (this.fullscreen) {
                 this.setSize(w, h);
+            }
+            else if (this.layoutOnOrientationChange) {
+                this.doComponentLayout();
             }
 
             if (this.floating && this.centered) {

@@ -11,7 +11,7 @@ Ext.gesture.Touch = Ext.extend(Ext.gesture.Gesture, {
         this.fire('touchstart', e);
         this.lastEvent = e;
         
-        if (this.listeners.touchdown) {
+        if (this.listeners && this.listeners.touchdown) {
             this.touchDownIntervalId = setInterval(Ext.createDelegate(this.touchDownHandler, this), this.touchDownInterval);
         }
     },
