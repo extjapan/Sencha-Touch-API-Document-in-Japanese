@@ -10,6 +10,7 @@
                 {"jp": "n/a", "path": "src/platform/src/",      "name": "Ext.js"},
                 {"jp": "done", "path": "src/platform/src/util/", "name": "Observable.js"},
                 {"jp": "n/a", "path": "src/platform/src/util/", "name": "Stateful.js"},
+                {"jp": "n/a", "path": "src/platform/src/util/", "name": "HashMap.js"},
                 {"jp": "n/a", "path": "src/platform/src/util/", "name": "MixedCollection.js"},
                 {"jp": "n/a", "path": "src/platform/src/util/", "name": "AbstractManager.js"},
                 {"jp": "n/a", "path": "src/platform/src/util/", "name": "DelayedTask.js"},
@@ -147,7 +148,9 @@
                 {"jp": "n/a", "path": "src/util/", "name": "Scroller.js"},
                 {"jp": "n/a", "path": "src/util/", "name": "Sortable.js"},
                 {"jp": "n/a", "path": "src/util/", "name": "Date.js"},
-                {"jp": "n/a", "path": "src/data/", "name": "Connection.js"}
+                {"jp": "n/a", "path": "src/data/", "name": "Connection.js"},
+				{"jp": "n/a", "path": "src/util/", "name": "EventSimulator.js"},
+				{"jp": "n/a", "path": "src/util/", "name": "EventRecorder.js"}
             ]
         },
         

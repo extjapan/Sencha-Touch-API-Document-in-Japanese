@@ -1,28 +1,26 @@
 /**
  * @class Ext.lib.Container
  * @extends Ext.Component
- * Shared Container class
+ * 共有コンテナクラス
  */
 Ext.lib.Container = Ext.extend(Ext.Component, {
     /**
      * @cfg {String/Object} layout
-     * <p><b>*Important</b>: In order for child items to be correctly sized and
-     * positioned, typically a layout manager <b>must</b> be specified through
-     * the <code>layout</code> configuration option.</p>
-     * <br><p>The sizing and positioning of child {@link items} is the responsibility of
-     * the Container's layout manager which creates and manages the type of layout
-     * you have in mind.  For example:</p>
-     * <p>If the {@link #layout} configuration is not explicitly specified for
-     * a general purpose container (e.g. Container or Panel) the
-     * {@link Ext.layout.AutoContainerLayout default layout manager} will be used
-     * which does nothing but render child components sequentially into the
-     * Container (no sizing or positioning will be performed in this situation).</p>
-     * <br><p><b><code>layout</code></b> may be specified as either as an Object or
-     * as a String:</p><div><ul class="mdetail-params">
-     *
-     * <li><u>Specify as an Object</u></li>
+     * <p><b>*重要</b>：コンテナ内に配置するコンポーネント（{@link items}）が正しいサイズで
+		 * 正しい位置に配置されるためには、この<code>layout</code>オプションを介してレイアウト
+		 * マネージャが設定されている必要があります。</p>
+     * <br><p>{@link items}で指定されたコンポーネントのサイズ設定や配置は、コンテナに設定された
+		 * レイアウトマネージャの責任であるため、開発者が意図した形に各コンポーネントをレイアウトす
+		 * るためにはレイアウトマネージャが正しく設定されている必要があります。例えば：</p>
+     * <p>{@link #layout}が明示的に設定されていない場合、ContainerやPanelといった汎用のコンテナ
+		 * では{@link Ext.layout.AutoContainerLayout デフォルトのレイアウトマネージャ}が設定されます。
+		 * ただし、このデフォルト設定では、itemsは単に順番にContainer内に描画されるだけです（サイズ
+		 * 設定や配置は行われません）。</p>
+     * <br><p><b><code>layout</code></b>はオブジェクトか文字列として指定できます：</p>
+		 * <div><ul class="mdetail-params">
+     * <li><u>オブジェクトとして指定</u></li>
      * <div><ul class="mdetail-params">
-     * <li>Example usage:</li>
+     * <li>利用例：</li>
      * <pre><code>
 layout: {
     type: 'vbox',
@@ -31,115 +29,105 @@ layout: {
        </code></pre>
      *
      * <li><code><b>type</b></code></li>
-     * <br/><p>The layout type to be used for this container.  If not specified,
-     * a default {@link Ext.layout.ContainerLayout} will be created and used.</p>
-     * <br/><p>Valid layout <code>type</code> values are:</p>
+     * <br/><p>このコンテナに適用するレイアウトの種類を指定します。指定しない場合、デフォルト値として
+     * {@link Ext.layout.ContainerLayout}が生成されます。</p>
+     * <br/><p><code>type</code>に設定可能なレイアウト値は下記の通り：</p>
      * <div class="sub-desc"><ul class="mdetail-params">
-     * <li><code><b>{@link Ext.layout.ContainerLayout auto}</b></code> &nbsp;&nbsp;&nbsp; <b>Default</b></li>
+     * <li><code><b>{@link Ext.layout.ContainerLayout auto}</b></code> &nbsp;&nbsp;&nbsp; <b>デフォルト</b></li>
      * <li><code><b>{@link Ext.layout.CardLayout card}</b></code></li>
      * <li><code><b>{@link Ext.layout.FitLayout fit}</b></code></li>
      * <li><code><b>{@link Ext.layout.HBoxLayout hbox}</b></code></li>
      * <li><code><b>{@link Ext.layout.VBoxLayout vbox}</b></code></li>
      * </ul></div>
      *
-     * <li>Layout specific configuration properties</li>
-     * <br/><p>Additional layout specific configuration properties may also be
-     * specified. For complete details regarding the valid config options for
-     * each layout type, see the layout class corresponding to the <code>type</code>
-     * specified.</p>
+     * <li>レイアウト別のコンフィグオプション</li>
+     * <br><p>レイアウト毎に設定可能なコンフィグオプションも同時に設定できます。
+		 * 設定可能なオプションの詳細については<code>type</code>に対応するレイアウトクラスを参照して
+		 * ください</p>
      *
      * </ul></div>
      *
-     * <li><u>Specify as a String</u></li>
+     * <li><u>文字列として指定</u></li>
      * <div><ul class="mdetail-params">
-     * <li>Example usage:</li>
+     * <li>利用例：</li>
      * <pre><code>
-layout: {
-    type: 'vbox',
-    padding: '5',
-    align: 'left'
-}
+layout: 'vbox'
        </code></pre>
      * <li><code><b>layout</b></code></li>
-     * <br/><p>The layout <code>type</code> to be used for this container (see list
-     * of valid layout type values above).</p><br/>
-     * <br/><p>Additional layout specific configuration properties. For complete
-     * details regarding the valid config options for each layout type, see the
-     * layout class corresponding to the <code>layout</code> specified.</p>
+     * <br><p>このコンテナに適用するレイアウトの種類を指定します（指定可能な値については上記参照）。</p><br>
      * </ul></div></ul></div>
      */
      
     /**
      * @cfg {String/Number} activeItem
-     * A string component id or the numeric index of the component that should be initially activated within the
-     * container's layout on render.  For example, activeItem: 'item-1' or activeItem: 0 (index 0 = the first
-     * item in the container's collection).  activeItem only applies to layout styles that can display
-     * items one at a time (like {@link Ext.layout.CardLayout} and
-     * {@link Ext.layout.FitLayout}).  Related to {@link Ext.layout.ContainerLayout#activeItem}.
+		 * コンテナが描画された際にレイアウトの中で最初に有効化されるコンポーネントをid（文字列）、またはコンポーネント
+		 * の位置を表すインデックス（数字）で指定。例としては「activeItem: 'item-1'」または「activeItem: 0」（コンテナの
+		 * itemsの中の最初のコンポーネントのインデックスが0）。activeItemはコンテナのitemsの中から同時に1つのコンポーネント
+		 * のみ表示するレイアウトで有効です（例えば{@link Ext.layout.CardLayout}、{@link Ext.layout.FitLayout}など）。
+		 * {@link Ext.layout.ContainerLayout#activeItem}も合わせて参照してください。
      */
     /**
      * @cfg {Object/Array} items
-     * <pre><b>** IMPORTANT</b>: be sure to <b>{@link #layout specify a <code>layout</code>} if needed ! **</b></pre>
-     * <p>A single item, or an array of child Components to be added to this container,
-     * for example:</p>
+     * <pre><b>** 重要</b>: 必要に応じて<b>{@link #layout <code>layout</code>を指定}するようにしてください。 **</b></pre>
+		 * <p>このコンテナに組み込むコンポーネント、またはコンポーネントの配列をしていします。例えば、</p>
      * <pre><code>
-// specifying a single item
+// コンポーネントを1つだけ組み込み
 items: {...},
-layout: 'fit',    // specify a layout!
+layout: 'fit',    // レイアウトの指定を忘れずに！
 
-// specifying multiple items
+// 複数のコンポーネントを組み込み
 items: [{...}, {...}],
-layout: 'hbox', // specify a layout!
+layout: 'hbox', // レイアウトの指定を忘れずに！
        </code></pre>
-     * <p>Each item may be:</p>
+     * <p>それぞれのitemは下記のいずれかの方法で指定可能です：</p>
      * <div><ul class="mdetail-params">
-     * <li>any type of object based on {@link Ext.Component}</li>
-     * <li>a fully instanciated object or</li>
-     * <li>an object literal that:</li>
+     * <li>{@link Ext.Component}を継承した任意のオブジェクト</li>
+     * <li>インスタンス化されたオブジェクト</li>
+     * <li>オブジェクトリテラル：</li>
      * <div><ul class="mdetail-params">
-     * <li>has a specified <code>{@link Ext.Component#xtype xtype}</code></li>
-     * <li>the {@link Ext.Component#xtype} specified is associated with the Component
-     * desired and should be chosen from one of the available xtypes as listed
-     * in {@link Ext.Component}.</li>
-     * <li>If an <code>{@link Ext.Component#xtype xtype}</code> is not explicitly
-     * specified, the {@link #defaultType} for that Container is used.</li>
-     * <li>will be "lazily instanciated", avoiding the overhead of constructing a fully
-     * instanciated Component object</li>
+     * <li><code>{@link Ext.Component#xtype xtype}</code>が設定されている必要があります。</li>
+     * <li>{@link Ext.Component#xtype}は生成したいコンポーネントのxtypeを{@link Ext.Component}に掲載されている
+		 * 一覧等から探して設定します。</li>
+     * <li><code>{@link Ext.Component#xtype xtype}</code>が明示的に指定されていない場合には、このコンテナの
+     * {@link #defaultType}が設定されます。</li>
+     * <li>コンポーネントのインスタンス化は遅延実行されます。これによりコンポーネントオブジェクトを生成する際の
+		 * オーバーヘッドを避けることができます。</li>
      * </ul></div></ul></div>
-     * <p><b>Notes</b>:</p>
+     * <p><b>注意</b>：</p>
      * <div><ul class="mdetail-params">
-     * <li>Ext uses lazy rendering. Child Components will only be rendered
-     * should it become necessary. Items are automatically laid out when they are first
-     * shown (no sizing is done while hidden), or in response to a {@link #doLayout} call.</li>
-     * <li>Do not specify <code>{@link Ext.Panel#contentEl contentEl}</code>/
-     * <code>{@link Ext.Panel#html html}</code> with <code>items</code>.</li>
+     * <li>Sencha Touchでは遅延レンダリング処理を取り入れています。itemsに設定されたコンポーネントは、表示が必要
+		 * になったタイミングで初めて描画されます。レイアウト処理はitemsが表示される際、または{@link #doLayout}メソッド
+		 * が呼ばれた際に行われます（非表示の間はサイズ設定は行われません）。</li>
+     * <li>itemsを指定する場合には<code>{@link Ext.Panel#contentEl contentEl}</code>や<code>{@link Ext.Panel#html html}</code>
+		 * は指定しないでください（逆も同じ）</code>.</li>
      * </ul></div>
      */
     /**
      * @cfg {Object|Function} defaults
-     * <p>This option is a means of applying default settings to all added items whether added through the {@link #items}
-     * config or via the {@link #add} or {@link #insert} methods.</p>
-     * <p>If an added item is a config object, and <b>not</b> an instantiated Component, then the default properties are
-     * unconditionally applied. If the added item <b>is</b> an instantiated Component, then the default properties are
-     * applied conditionally so as not to override existing properties in the item.</p>
-     * <p>If the defaults option is specified as a function, then the function will be called using this Container as the
-     * scope (<code>this</code> reference) and passing the added item as the first parameter. Any resulting object
-     * from that call is then applied to the item as default properties.</p>
-     * <p>For example, to automatically apply padding to the body of each of a set of
-     * contained {@link Ext.Panel} items, you could pass: <code>defaults: {bodyStyle:'padding:15px'}</code>.</p>
-     * <p>Usage:</p><pre><code>
-defaults: {               // defaults are applied to items, not the container
+     * <p>このオプションはコンテナのitems内の全てのコンポーネントに適用するデフォルトプロパティを設定します。
+		 * defaultsで指定した値は{@link #items}を介して組み込まれたコンポーネントだけでなく、{@link #add} および
+		 * {@link #insert}メソッドで追加されたコンポーネントにも適用されます。</p>
+		 * <p>追加されるコンポーネントがオブジェクトリテラル形式の場合（インスタンス化されたコンポーネントでは<b>ない</b>
+		 * 場合）、defaultsで指定されたプロパティは無条件で全て適用されます。追加されるコンポーネントがインスタンス化
+		 * されている場合には、そのインスタンスで設定済みのプロパティを上書きしないものだけが適用されます。</p>
+     * <p>defaultsに関数が指定された場合、その関数は追加されるコンポーネントを第一引数としてして受け取り、このコンテナの
+		 * スコープ内で実行され（コンテナを<code>this</code>として実行され）ます。この関数の実行結果（オブジェクト）が
+		 * そのまま追加対象のオブジェクトにデフォルトプロパティとして適用されます。</p>
+     * <p>例えば、itemsで追加される{@link Ext.Panel}のbodyに対して自動的にパディングを適用したい場合は：<code>defaults: 
+		 * {bodyStyle:'padding:15px'}</code>となります。</p>
+     * <p>利用方法:</p><pre><code>
+defaults: {               // defaultsはコンテナではなくitems内のコンポーネント対して適用されます。
     autoScroll:true
 },
 items: [
     {
-        xtype: 'panel',   // defaults <b>do not</b> have precedence over
-        id: 'panel1',     // options in config objects, so the defaults
-        autoScroll: false // will not be applied here, panel1 will be autoScroll:false
+        xtype: 'panel',   // defaultsで指定したプロパティがコンフィグオブジェクトでも指定され
+        id: 'panel1',     // いる場合は、コンフィグオブジェクトの値が優先されます。
+        autoScroll: false // 従って、ここでは autoScroll:false となります。
     },
-    new Ext.Panel({       // defaults <b>do</b> have precedence over options
-        id: 'panel2',     // options in components, so the defaults
-        autoScroll: false // will be applied here, panel2 will be autoScroll:true.
+    new Ext.Panel({       // defaultsで指定したプロパティがインスタンス化されたコンポーネントの場合は
+        id: 'panel2',     // defaultsの値が優先されます。
+        autoScroll: false // 従って、ここでは autoScroll:true となります。
     })
 ]
        </code></pre>
@@ -147,15 +135,15 @@ items: [
 
 
     /** @cfg {Boolean} autoDestroy
-     * If true the container will automatically destroy any contained component that is removed from it, else
-     * destruction must be handled manually (defaults to true).
+		 * trueを設定すると、コンテナから削除されたコンポーネントは自動的に破壊されます。falseの場合は削除した
+		 * コンポーネントの破壊処理を実装する必要があります（デフォルト値はtrue）。
      */
     autoDestroy : true,
 
      /** @cfg {String} defaultType
-      * <p>The default {@link Ext.Component xtype} of child Components to create in this Container when
-      * a child item is specified as a raw configuration object, rather than as an instantiated Component.</p>
-      * <p>Defaults to <code>'panel'</code>.</p>
+			* <p>itemsに追加するコンポーネントがコンフィグオブジェクトで指定されていて、かつxtypeが明示されていない
+			* 場合に適用するデフォルトの{@link Ext.Component xtype}です。</p>
+			* <p>デフォルト値は'panel'です。</p>
       */
     defaultType: 'panel',
 
@@ -165,9 +153,9 @@ items: [
 
     /**
      * @cfg {Array} bubbleEvents
-     * <p>An array of events that, when fired, should be bubbled to any parent container.
-     * See {@link Ext.util.Observable#enableBubble}.
-     * Defaults to <code>['add', 'remove']</code>.
+		 * <p>バブルアップする対象となるイベント名を配列で指定します。
+     * {@link Ext.util.Observable#enableBubble}も参照してください。
+     * デフォルト値は<code>['add', 'remove']</code>。</p>
      */
     bubbleEvents: ['add', 'remove'],
 
@@ -176,6 +164,7 @@ items: [
         this.addEvents(
             /**
              * @event afterlayout
+						 * イベント終了後に発生します。
              * Fires when the components in this container are arranged by the associated layout manager.
              * @param {Ext.Container} this
              * @param {ContainerLayout} layout The ContainerLayout implementation for this container
